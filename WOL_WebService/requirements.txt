@@ -1,0 +1,4 @@
+wakeonlan
+flask
+flask_socketio
+paramiko

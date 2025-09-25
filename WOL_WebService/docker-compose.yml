@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  whisper-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: WOL-wb-app
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+      - WHISPER_MODEL=medium
+    ports:
+      - "12345:12345"
+      - "12346:12346"
+    volumes:
+      - .:/app
+    restart: unless-stopped
+    command: ["/start.sh"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
