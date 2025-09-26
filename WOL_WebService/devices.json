@@ -1,0 +1,41 @@
+[
+    {
+        "id": "af591719-9216-4040-8f35-8fcda306d771",
+        "name": "PROXMOX1",
+        "mac": "2c:f0:5d:5e:17:3e",
+        "ip": "192.168.1.204",
+        "subnet": "255.255.255.0",
+        "port": 9,
+        "ssh": {
+            "enabled": true,
+            "username": "root",
+            "authMethod": "password",
+            "password": "Collodri12!"
+        },
+        "status": "online"
+    },
+    {
+        "id": "7198a5d5-cae0-4cb1-848e-ae0ce14f1bc2",
+        "name": "PROXMOX2",
+        "mac": "9c:8e:99:3c:a4:2a",
+        "ip": "192.168.1.205",
+        "subnet": "255.255.255.0",
+        "port": 9,
+        "ssh": {
+            "enabled": false
+        },
+        "status": "online"
+    },
+    {
+        "id": "88469f2a-3e53-47f7-926b-7f4d3c642739",
+        "name": "",
+        "mac": "2c:f0:5d:5e:17:3e",
+        "ip": "",
+        "subnet": "255.255.255.0",
+        "port": 9,
+        "status": "unknown",
+        "ssh": {
+            "enabled": false
+        }
+    }
+]

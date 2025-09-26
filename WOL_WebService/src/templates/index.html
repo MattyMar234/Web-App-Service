@@ -7,66 +7,401 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --container-bg: white;
+            --header-bg: white;
+            --text-color: #343a40;
+            --table-header-bg: #343a40;
+            --table-header-text: white;
+            --table-row-hover: #f1f1f1;
+            --empty-state-color: #6c757d;
+            --empty-state-icon: #dee2e6;
+            --modal-header-bg: #343a40;
+            --modal-header-text: white;
+            --ssh-section-bg: #f8f9fa;
+            --ssh-section-text: #495057;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0,0,0,0.1);
+            --btn-primary-bg: #4285F4;
+            --btn-primary-hover: #3367D6;
+            --btn-primary-shadow: rgba(0,0,0,0.1);
+            --btn-primary-hover-shadow: rgba(0,0,0,0.15);
+            --form-focus-border: #4285F4;
+            --form-focus-shadow: rgba(66, 133, 244, 0.25);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --header-bg: #2d2d2d;
+            --text-color: #f8f9fa;
+            --table-header-bg: #343a40;
+            --table-header-text: white;
+            --table-row-hover: #3a3a3a;
+            --empty-state-color: #adb5bd;
+            --empty-state-icon: #6c757d;
+            --modal-header-bg: #343a40;
+            --modal-header-text: white;
+            --ssh-section-bg: #3a3a3a;
+            --ssh-section-text: #f8f9fa;
+            --border-color: #495057;
+            --shadow-color: rgba(0,0,0,0.3);
+            --btn-primary-bg: #4285F4;
+            --btn-primary-hover: #3367D6;
+            --btn-primary-shadow: rgba(0,0,0,0.2);
+            --btn-primary-hover-shadow: rgba(0,0,0,0.3);
+            --form-focus-border: #4285F4;
+            --form-focus-shadow: rgba(66, 133, 244, 0.25);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 1200px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .table-container {
+            background-color: var(--container-bg);
+            border-radius: 10px;
+            box-shadow: 0 0 15px var(--shadow-color);
+            padding: 20px;
+            margin-top: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .table-responsive {
+            flex: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .table thead th {
+            background-color: var(--table-header-bg);
+            color: var(--table-header-text);
+            border: none;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            text-align: center;
+        }
+        
+        .table tbody tr {
+            transition: all 0.2s;
+        }
+        
+        .table tbody tr:hover {
+            background-color: var(--table-row-hover);
+            /* transform: scale(1.01); */
+        }
+        
         .status-online {
-            color: #28a745;
+            color: #8ed81f;
         }
+        
         .status-offline {
-            color: #dc3545;
+            color: #f18b05;
         }
+        
         .status-unknown {
             color: #6c757d;
         }
-        .table-responsive {
-            max-height: 70vh;
+        
+        /* Stile pulsanti personalizzati - solo bordi colorati */
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 20%;
+            border: 2px solid;
+            /* background-color: transparent; */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
         }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .btn-view {
+            border-color: #4285F4;
+            color: #4285F4;
+        }
+        
+        .btn-view:hover {
+            background-color: #4285F4;
+            color: white;
+        }
+        
+        .btn-edit {
+            border-color: #9C27B0;
+            background-color: #9C27B0;
+            color: #9C27B0;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background-color: #9C27B0;
+            color: white;
+        }
+        
         .btn-wake {
-            background: linear-gradient(45deg, #28a745, #20c997);
-            border: none;
+            border-color: #00C853;
+            background-color: #00C853;
+            color: #00C853;
+            color: white;
         }
+        
         .btn-wake:hover {
-            background: linear-gradient(45deg, #218838, #1ba085);
+            background-color: #00C853;
+            color: white;
         }
+        
+        .btn-delete {
+            border-color: #FF3547;
+            background-color: #FF3547;
+            color: #FF3547;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background-color: #FF3547;
+            color: white;
+        }
+        
         .btn-shutdown {
-            background: linear-gradient(45deg, #dc3545, #c82333);
-            border: none;
+            border-color: #ffdc16;
+            background-color: #ffdc16;
+            color: #ffdc16;
+            color: white;
         }
+        
         .btn-shutdown:hover {
-            background: linear-gradient(45deg, #c82333, #bd2130);
+            background-color: #ffdc16;
+            color: white;
+        }
+        
+        .header-section {
+            background-color: var(--header-bg);
+            border-radius: 10px;
+            box-shadow: 0 0 15px var(--shadow-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-section h1 {
+            margin: 0;
+            color: var(--text-color);
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .theme-switcher {
+            background: transparent;
+            border: 2px solid var(--text-color);
+            border-radius: 50px;
+            width: 50px;
+            height: 26px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .theme-switcher::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: var(--text-color);
+            transition: all 0.3s;
+        }
+        
+        [data-theme="dark"] .theme-switcher::before {
+            transform: translateX(24px);
+        }
+        
+        .btn-primary {
+            background-color: var(--btn-primary-bg);
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-weight: 500;
+            box-shadow: 0 2px 4px var(--btn-primary-shadow);
+            transition: all 0.2s;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--btn-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--btn-primary-hover-shadow);
+        }
+        
+        .modal-content {
+            background-color: var(--container-bg);
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            color: var(--text-color);
+        }
+        
+        .modal-header {
+            background-color: var(--modal-header-bg);
+            color: var(--modal-header-text);
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+        
+        .form-control, .form-select {
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            border-color: var(--border-color);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--form-focus-border);
+            box-shadow: 0 0 0 0.25rem var(--form-focus-shadow);
+            background-color: var(--container-bg);
+            color: var(--text-color);
+        }
+        
+        .btn-primary-modal {
+            background-color: var(--btn-primary-bg);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 20px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: white;
+        }
+        
+        .btn-primary-modal:hover {
+            background-color: var(--btn-primary-hover);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--empty-state-color);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: var(--empty-state-icon);
+        }
+        
+        .ssh-section {
+            background-color: var(--ssh-section-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .ssh-section h5 {
+            color: var(--ssh-section-text);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .ssh-section .form-label {
+            font-weight: 500;
+            color: var(--ssh-section-text);
+        }
+        
+        .ssh-toggle {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .ssh-toggle .form-check-input {
+            margin-right: 10px;
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--btn-primary-bg);
+            border-color: var(--btn-primary-bg);
+        }
+        
+        .form-check-input:focus {
+            border-color: var(--btn-primary-bg);
+            box-shadow: 0 0 0 0.25rem var(--form-focus-shadow);
         }
     </style>
 </head>
 <body>
     <div class="container py-4">
-        <header class="d-flex justify-content-between align-items-center mb-4">
+        <div class="header-section">
             <h1>Wake-on-LAN Manager</h1>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deviceModal">
-                <i class="bi bi-plus-circle"></i> Aggiungi Dispositivo
-            </button>
-        </header>
+            <div class="header-controls">
+                <div class="theme-switcher" id="themeToggle" title="Cambia tema"></div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deviceModal">
+                    <i class="bi bi-plus-circle me-2"></i> Aggiungi Dispositivo
+                </button>
+            </div>
+        </div>
 
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Nome</th>
-                        <th>MAC Address</th>
-                        <th>IP</th>
-                        <th>Subnet</th>
-                        <th>Porta</th>
-                        <th>Stato</th>
-                        <th>Azioni</th>
-                    </tr>
-                </thead>
-                <tbody id="devicesTableBody">
-                    <!-- Le righe dei dispositivi verranno caricate dinamicamente qui -->
-                </tbody>
-            </table>
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>MAC Address</th>
+                            <th>IP</th>
+                            <th>Subnet</th>
+                            <th>Porta</th>
+                            <th>Stato</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="devicesTableBody">
+                        <!-- Le righe dei dispositivi verranno caricate dinamicamente qui -->
+                        <tr class="empty-state">
+                            <td colspan="7">
+                                <i class="bi bi-inbox"></i>
+                                <p>Nessun dispositivo trovato. Aggiungi un nuovo dispositivo per iniziare.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Modale Aggiungi/Modifica Dispositivo -->
     <div class="modal fade" id="deviceModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">Aggiungi Dispositivo</h5>
@@ -75,35 +410,97 @@
                 <div class="modal-body">
                     <form id="deviceForm">
                         <input type="hidden" id="deviceId">
-                        <div class="mb-3">
-                            <label for="deviceName" class="form-label">Nome Dispositivo</label>
-                            <input type="text" class="form-control" id="deviceName" required>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="deviceName" class="form-label">Nome Dispositivo</label>
+                                    <input type="text" class="form-control" id="deviceName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="deviceMac" class="form-label">MAC Address</label>
+                                    <input type="text" class="form-control" id="deviceMac" 
+                                           placeholder="XX:XX:XX:XX:XX:XX" pattern="([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="deviceIp" class="form-label">Indirizzo IP (opzionale)</label>
+                                    <input type="text" class="form-control" id="deviceIp" 
+                                           placeholder="192.168.1.100">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="deviceSubnet" class="form-label">Subnet Mask (opzionale)</label>
+                                    <input type="text" class="form-control" id="deviceSubnet" 
+                                           placeholder="255.255.255.0" value="255.255.255.0">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="devicePort" class="form-label">Porta (default: 9)</label>
+                                    <input type="number" class="form-control" id="devicePort" 
+                                           min="1" max="65535" value="9">
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="deviceMac" class="form-label">MAC Address</label>
-                            <input type="text" class="form-control" id="deviceMac" 
-                                   placeholder="XX:XX:XX:XX:XX:XX" pattern="([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="deviceIp" class="form-label">Indirizzo IP (opzionale)</label>
-                            <input type="text" class="form-control" id="deviceIp" 
-                                   placeholder="192.168.1.100">
-                        </div>
-                        <div class="mb-3">
-                            <label for="deviceSubnet" class="form-label">Subnet Mask (opzionale)</label>
-                            <input type="text" class="form-control" id="deviceSubnet" 
-                                   placeholder="255.255.255.0" value="255.255.255.0">
-                        </div>
-                        <div class="mb-3">
-                            <label for="devicePort" class="form-label">Porta (default: 9)</label>
-                            <input type="number" class="form-control" id="devicePort" 
-                                   min="1" max="65535" value="9">
+                        
+                        <!-- Sezione SSH -->
+                        <div class="ssh-section">
+                            <h5><i class="bi bi-shield-lock me-2"></i>Credenziali SSH per Spegnimento Remoto</h5>
+                            
+                            <div class="ssh-toggle">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="useSsh">
+                                    <label class="form-check-label" for="useSsh">
+                                        Abilita spegnimento remoto via SSH
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="sshCredentials" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="sshUsername" class="form-label">Username SSH</label>
+                                            <input type="text" class="form-control" id="sshUsername" 
+                                                   placeholder="admin">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="sshAuthMethod" class="form-label">Metodo di Autenticazione</label>
+                                            <select class="form-select" id="sshAuthMethod">
+                                                <option value="password">Password</option>
+                                                <option value="key">Chiave SSH</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="sshPasswordDiv">
+                                    <div class="mb-3">
+                                        <label for="sshPassword" class="form-label">Password SSH</label>
+                                        <input type="password" class="form-control" id="sshPassword" 
+                                               placeholder="Inserisci password">
+                                    </div>
+                                </div>
+                                
+                                <div id="sshKeyDiv" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="sshKeyFile" class="form-label">Percorso Chiave SSH</label>
+                                        <input type="text" class="form-control" id="sshKeyFile" 
+                                               placeholder="/path/to/private/key">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="sshKeyPassphrase" class="form-label">Passphrase Chiave (opzionale)</label>
+                                        <input type="password" class="form-control" id="sshKeyPassphrase" 
+                                               placeholder="Passphrase della chiave">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                    <button type="button" class="btn btn-primary" id="saveDevice">Salva</button>
+                    <button type="button" class="btn btn-primary-modal" id="saveDevice">Salva</button>
                 </div>
             </div>
         </div>
@@ -113,43 +510,113 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Gestione del tema
+            const themeToggle = document.getElementById('themeToggle');
+            const html = document.documentElement;
+            
+            // Funzione per impostare il tema
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    html.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    html.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+            
+            // Imposta il tema iniziale
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                setTheme(savedTheme);
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                setTheme('dark');
+            }
+            
+            // Gestore di eventi per il toggle del tema
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            });
+            
+            // Ascolta i cambiamenti del tema di sistema
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                    if (!localStorage.getItem('theme')) {
+                        setTheme(e.matches ? 'dark' : 'light');
+                    }
+                });
+            }
+            
             const devicesTableBody = document.getElementById('devicesTableBody');
             const deviceModal = new bootstrap.Modal(document.getElementById('deviceModal'));
             const modalTitle = document.getElementById('modalTitle');
             const deviceForm = document.getElementById('deviceForm');
             const saveButton = document.getElementById('saveDevice');
             
+            // Elementi SSH
+            const useSshCheckbox = document.getElementById('useSsh');
+            const sshCredentialsDiv = document.getElementById('sshCredentials');
+            const sshAuthMethod = document.getElementById('sshAuthMethod');
+            const sshPasswordDiv = document.getElementById('sshPasswordDiv');
+            const sshKeyDiv = document.getElementById('sshKeyDiv');
+            
+            // Gestione visualizzazione credenziali SSH
+            useSshCheckbox.addEventListener('change', function() {
+                sshCredentialsDiv.style.display = this.checked ? 'block' : 'none';
+            });
+            
+            sshAuthMethod.addEventListener('change', function() {
+                if (this.value === 'password') {
+                    sshPasswordDiv.style.display = 'block';
+                    sshKeyDiv.style.display = 'none';
+                } else {
+                    sshPasswordDiv.style.display = 'none';
+                    sshKeyDiv.style.display = 'block';
+                }
+            });
+            
             // Connetti al server SocketIO
             const socket = io('http://localhost:12345');
             
             // Funzione per renderizzare la tabella dei dispositivi
             function renderDevicesTable(devices) {
+                if (devices.length === 0) {
+                    devicesTableBody.innerHTML = `
+                        <tr class="empty-state">
+                            <td colspan="7">
+                                <i class="bi bi-inbox"></i>
+                                <p>Nessun dispositivo trovato. Aggiungi un nuovo dispositivo per iniziare.</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
                 devicesTableBody.innerHTML = devices.map(device => `
                     <tr data-device-id="${device.id}">
-                        <td>${device.name}</td>
-                        <td>${device.mac}</td>
-                        <td>${device.ip || '-'}</td>
-                        <td>${device.subnet || '-'}</td>
-                        <td>${device.port}</td>
-                        <td>
+                        <td class="text-center">${device.name}</td>
+                        <td class="text-center">${device.mac}</td>
+                        <td class="text-center">${device.ip || '-'}</td>
+                        <td class="text-center">${device.subnet || '-'}</td>
+                        <td class="text-center">${device.port}</td>
+                        <td class="text-center">
                             <i class="bi bi-circle-fill status-${device.status || 'unknown'}"></i>
                             ${device.status === 'online' ? 'Online' : device.status === 'offline' ? 'Offline' : 'Sconosciuto'}
                         </td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <button class="btn btn-wake btn-sm text-white" onclick="wakeDevice('${device.id}')" title="Wake-on-LAN">
-                                    <i class="bi bi-power"></i>
-                                </button>
-                                <button class="btn btn-shutdown btn-sm text-white" onclick="shutdownDevice('${device.id}')" title="Spegni dispositivo">
-                                    <i class="bi bi-power"></i>
-                                </button>
-                                <button class="btn btn-warning btn-sm" onclick="editDevice('${device.id}')" title="Modifica">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteDevice('${device.id}')" title="Elimina">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
+                        <td class="text-center">
+                            <button class="action-btn btn-wake" onclick="wakeDevice('${device.id}')" title="Accendi dispositivo">
+                                <i class="bi bi-power"></i>
+                            </button>
+                            <button class="action-btn btn-shutdown" onclick="shutdownDevice('${device.id}')" title="Spegni dispositivo">
+                                <i class="bi bi-power"></i>
+                            </button>
+                            <button class="action-btn btn-edit" onclick="editDevice('${device.id}')" title="Modifica">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="action-btn btn-delete" onclick="deleteDevice('${device.id}')" title="Elimina">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </td>
                     </tr>
                 `).join('');
@@ -175,6 +642,8 @@
             // Salva dispositivo
             saveButton.addEventListener('click', async () => {
                 const deviceId = document.getElementById('deviceId').value;
+                
+                // Raccogli dati base del dispositivo
                 const deviceData = {
                     name: document.getElementById('deviceName').value,
                     mac: document.getElementById('deviceMac').value,
@@ -182,13 +651,36 @@
                     subnet: document.getElementById('deviceSubnet').value,
                     port: document.getElementById('devicePort').value
                 };
-
-                try {
-                    const url = deviceId ? `/api/devices/${deviceId}` : '/api/devices';
-                    const method = deviceId ? 'PUT' : 'POST';
+                
+                // Se stiamo modificando, aggiungi l'ID
+                if (deviceId) {
+                    deviceData.id = deviceId;
+                }
+                
+                // Raccogli dati SSH se abilitati
+                if (useSshCheckbox.checked) {
+                    deviceData.ssh = {
+                        enabled: true,
+                        username: document.getElementById('sshUsername').value,
+                        authMethod: sshAuthMethod.value
+                    };
                     
-                    const response = await fetch(url, {
-                        method,
+                    if (sshAuthMethod.value === 'password') {
+                        deviceData.ssh.password = document.getElementById('sshPassword').value;
+                    } else {
+                        deviceData.ssh.keyFile = document.getElementById('sshKeyFile').value;
+                        deviceData.ssh.keyPassphrase = document.getElementById('sshKeyPassphrase').value;
+                    }
+                } else {
+                    deviceData.ssh = {
+                        enabled: false
+                    };
+                }
+                
+                try {
+                    // Usiamo sempre POST, sia per creazione che per aggiornamento
+                    const response = await fetch('/api/devices', {
+                        method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify(deviceData)
                     });
@@ -197,7 +689,8 @@
                         deviceModal.hide();
                         // Dopo aver salvato, il backend invierà un nuovo elenco tramite SocketIO
                     } else {
-                        alert('Errore durante il salvataggio!');
+                        const errorData = await response.json();
+                        alert(`Errore durante il salvataggio: ${errorData.error || 'Errore sconosciuto'}`);
                     }
                 } catch (error) {
                     console.error('Errore salvataggio:', error);
@@ -208,9 +701,13 @@
             // Modifica dispositivo
             window.editDevice = async (id) => {
                 try {
-                    const response = await fetch(`/api/devices/${id}`);
+                    const response = await fetch(`/api/devices/${id}`, {method: 'GET'});
+                    if (!response.ok) {
+                        throw new Error('Dispositivo non trovato');
+                    }
                     const device = await response.json();
                     
+                    // Popola i campi base
                     document.getElementById('deviceId').value = device.id;
                     document.getElementById('deviceName').value = device.name;
                     document.getElementById('deviceMac').value = device.mac;
@@ -218,10 +715,34 @@
                     document.getElementById('deviceSubnet').value = device.subnet || '255.255.255.0';
                     document.getElementById('devicePort').value = device.port;
                     
+                    // Popola i campi SSH se presenti
+                    if (device.ssh && device.ssh.enabled) {
+                        useSshCheckbox.checked = true;
+                        sshCredentialsDiv.style.display = 'block';
+                        
+                        document.getElementById('sshUsername').value = device.ssh.username || '';
+                        sshAuthMethod.value = device.ssh.authMethod || 'password';
+                        
+                        if (sshAuthMethod.value === 'password') {
+                            sshPasswordDiv.style.display = 'block';
+                            sshKeyDiv.style.display = 'none';
+                            document.getElementById('sshPassword').value = device.ssh.password || '';
+                        } else {
+                            sshPasswordDiv.style.display = 'none';
+                            sshKeyDiv.style.display = 'block';
+                            document.getElementById('sshKeyFile').value = device.ssh.keyFile || '';
+                            document.getElementById('sshKeyPassphrase').value = device.ssh.keyPassphrase || '';
+                        }
+                    } else {
+                        useSshCheckbox.checked = false;
+                        sshCredentialsDiv.style.display = 'none';
+                    }
+                    
                     modalTitle.textContent = 'Modifica Dispositivo';
                     deviceModal.show();
                 } catch (error) {
                     console.error('Errore caricamento dispositivo:', error);
+                    alert('Errore durante il caricamento del dispositivo!');
                 }
             };
 
@@ -261,20 +782,18 @@
             
             // Shutdown remoto
             window.shutdownDevice = async (id) => {
-                if (confirm('Sei sicuro di voler spegnere questo dispositivo?')) {
-                    try {
-                        const response = await fetch(`/api/shutdown/${id}`, {method: 'POST'});
-                        const result = await response.json();
-                        
-                        if (result.status === 'success') {
-                            alert('Comando di shutdown inviato con successo!');
-                        } else {
-                            alert(`Errore: ${result.error}`);
-                        }
-                    } catch (error) {
-                        console.error('Errore shutdown:', error);
-                        alert('Errore di connessione!');
+                try {
+                    const response = await fetch(`/api/shutdown/${id}`, {method: 'POST'});
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        alert('Comando di shutdown inviato con successo!');
+                    } else {
+                        alert(`Errore: ${result.error}`);
                     }
+                } catch (error) {
+                    console.error('Errore shutdown:', error);
+                    alert('Errore di connessione!');
                 }
             };
 
@@ -282,6 +801,11 @@
             document.getElementById('deviceModal').addEventListener('hidden.bs.modal', () => {
                 deviceForm.reset();
                 document.getElementById('deviceId').value = '';
+                useSshCheckbox.checked = false;
+                sshCredentialsDiv.style.display = 'none';
+                sshAuthMethod.value = 'password';
+                sshPasswordDiv.style.display = 'block';
+                sshKeyDiv.style.display = 'none';
                 modalTitle.textContent = 'Aggiungi Dispositivo';
             });
         });
