@@ -22,4 +22,4 @@ ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
 
-CMD ["python3", "scr/main.py"]
+CMD ["python3", "src/main.py"]

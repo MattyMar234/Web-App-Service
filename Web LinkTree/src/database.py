@@ -6,6 +6,7 @@ from contextlib import contextmanager
 # Questo assicura che il file venga sempre creato nella cartella del progetto
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.path.join(BASE_DIR, 'data', 'linktree.db')
+os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
 
 @contextmanager
 def get_db():
