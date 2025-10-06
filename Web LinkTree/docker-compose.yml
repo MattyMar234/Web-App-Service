@@ -6,7 +6,8 @@ services:
     ports:
       - "5000:8080"
     volumes:
-      - ./data:/app/data
+      - .:/app
     environment:
       - FLASK_APP=app.py
       - FLASK_RUN_HOST=0.0.0.0
+    restart: unless-stopped
