@@ -5,7 +5,7 @@ from contextlib import contextmanager
 # Definisci il percorso del database in modo assoluto
 # Questo assicura che il file venga sempre creato nella cartella del progetto
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DATABASE = os.path.join(BASE_DIR, 'linktree.db')
+DATABASE = os.path.join(BASE_DIR, 'data', 'linktree.db')
 
 @contextmanager
 def get_db():
