@@ -1,0 +1,10 @@
+[
+  {
+    "id": "6098b812-76a8-4e33-86e5-0b37adfd9c38",
+    "title": "PORTAINER",
+    "url": "http://192.168.1.217:9000",
+    "icon": "fa-link",
+    "template": "button-default",
+    "created_at": "2025-10-06T21:12:14.726284"
+  }
+]

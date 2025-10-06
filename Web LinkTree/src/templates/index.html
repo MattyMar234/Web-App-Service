@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkTree Clone</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/templates.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>I Miei Link</h1>
+            <div class="header-controls">
+                <button id="edit-mode-btn" class="btn-secondary">
+                    <i class="fas fa-edit"></i> Modifica
+                </button>
+                <button id="add-entry-btn" class="btn-primary">
+                    <i class="fas fa-plus"></i> Aggiungi
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <div id="entries-container" class="entries-container">
+                <!-- Le entry verranno caricate dinamicamente -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Popup per aggiungere/modificare entry -->
+    <div id="entry-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Aggiungi Nuovo Link</h2>
+            <form id="entry-form" enctype="multipart/form-data">
+                <input type="hidden" id="entry-id" name="entry-id">
+                
+                <div class="form-group">
+                    <label for="entry-title">Titolo</label>
+                    <input type="text" id="entry-title" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="entry-url">URL</label>
+                    <input type="url" id="entry-url" name="url" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="entry-icon">Icona (opzionale)</label>
+                    <input type="file" id="entry-icon" name="icon" accept="image/*">
+                    <div id="icon-preview" class="icon-preview"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="entry-template">Template</label>
+                    <select id="entry-template" name="template">
+                        <option value="default">Default</option>
+                        <option value="amazon">Amazon</option>
+                        <option value="amazon-music">Amazon Music</option>
+                        <option value="appstore">Apple App Store</option>
+                        <option value="apple-music">Apple Music</option>
+                        <option value="apple-music-alt">Apple Music Alt</option>
+                        <option value="apple-podcasts">Apple Podcasts</option>
+                        <option value="apple-podcasts-alt">Apple Podcasts Alt</option>
+                        <option value="bandcamp">Bandcamp</option>
+                        <option value="behance">Behance</option>
+                        <option value="bluesky">Bluesky</option>
+                        <option value="bluesky-alt">Bluesky Alt</option>
+                        <option value="coffee">Buy Me a Coffee</option>
+                        <option value="cal">Cal.com</option>
+                        <option value="calendly">Calendly</option>
+                        <option value="cash-app">Cash App</option>
+                        <option value="dev-to">dev.to</option>
+                        <option value="discogs">Discogs</option>
+                        <option value="discogs-alt">Discogs Alt</option>
+                        <option value="discord">Discord</option>
+                        <option value="dribbble">Dribbble</option>
+                        <option value="etsy">Etsy</option>
+                        <option value="faceb">Facebook</option>
+                        <option value="messenger">Facebook Messenger</option>
+                        <option value="figma">Figma</option>
+                        <option value="fiverr">Fiverr</option>
+                        <option value="flickr">Flickr</option>
+                        <option value="github">GitHub</option>
+                        <option value="gitlab">GitLab</option>
+                        <option value="gofundme">GoFundMe</option>
+                        <option value="goodreads">Goodreads</option>
+                        <option value="google-black">Google Black</option>
+                        <option value="playstore">Google Play Store</option>
+                        <option value="google-scholar">Google Scholar</option>
+                        <option value="hashnode">Hashnode</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="kick">Kick</option>
+                        <option value="kick-alt">Kick Alt</option>
+                        <option value="kickstarter">Kickstarter</option>
+                        <option value="kit">Kit</option>
+                        <option value="ko-fi">Ko-fi</option>
+                        <option value="last-fm">Last.fm</option>
+                        <option value="letterboxd">Letterboxd</option>
+                        <option value="line">Line</option>
+                        <option value="linked">LinkedIn</option>
+                        <option value="mailchimp">Mailchimp</option>
+                        <option value="mastodon">Mastodon</option>
+                        <option value="matrix">Matrix</option>
+                        <option value="meetup">Meetup</option>
+                        <option value="meetup-alt">Meetup Alt</option>
+                        <option value="medium">Medium</option>
+                        <option value="microsoft">Microsoft</option>
+                        <option value="notion">Notion</option>
+                        <option value="obsidian">Obsidian</option>
+                        <option value="onlyfans">OnlyFans</option>
+                        <option value="patreon">Patreon</option>
+                        <option value="paypal">PayPal</option>
+                        <option value="pinterest">Pinterest</option>
+                        <option value="product-hunt">Product Hunt</option>
+                        <option value="reddit">Reddit</option>
+                        <option value="shop">Shop</option>
+                        <option value="signal">Signal</option>
+                        <option value="signal-alt">Signal Alt</option>
+                        <option value="slack">Slack</option>
+                        <option value="snapchat">Snapchat</option>
+                        <option value="soundcloud">SoundCloud</option>
+                        <option value="spotify">Spotify</option>
+                        <option value="spotify-alt">Spotify Alt</option>
+                        <option value="square">Square</option>
+                        <option value="stack-overflow">Stack Overflow</option>
+                        <option value="steam">Steam</option>
+                        <option value="steam-alt">Steam Alt</option>
+                        <option value="strava">Strava</option>
+                        <option value="substack">Substack</option>
+                        <option value="telegram">Telegram</option>
+                        <option value="threads">Threads</option>
+                        <option value="threema">Threema</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="trello">Trello</option>
+                        <option value="tumb">Tumblr</option>
+                        <option value="twitch">Twitch</option>
+                        <option value="unsplash">Unsplash</option>
+                        <option value="venmo">Venmo</option>
+                        <option value="vimeo">Vimeo</option>
+                        <option value="vsco">VSCO</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="wordpress">WordPress</option>
+                        <option value="x">X</option>
+                        <option value="yt">YouTube</option>
+                        <option value="yt-alt">YouTube Alt</option>
+                        <option value="zoom">Zoom</option>
+                        <option value="custom">Personalizzato</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Anteprima Template</label>
+                    <div id="template-preview" class="template-preview">
+                        <button class="button button-default">Anteprima</button>
+                    </div>
+                </div>
+                
+                <!-- QUESTA È LA SEZIONE CRITICA CHE ERA MANCANTE O SBAGLIATA -->
+                <div id="custom-options" class="custom-options" style="display: none;">
+                    <div class="form-group">
+                        <label for="custom-bg-color">Colore Sfondo</label>
+                        <input type="color" id="custom-bg-color" name="custom-bg-color" value="#2457F5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="custom-border-color">Colore Bordo</label>
+                        <input type="color" id="custom-border-color" name="custom-border-color" value="#ffffff">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="custom-text-color">Colore Testo</label>
+                        <input type="color" id="custom-text-color" name="custom-text-color" value="#ffffff">
+                    </div>
+                </div>
+                <!-- FINE SEZIONE CRITICA -->
+                
+                <div class="form-actions">
+                    <button type="button" id="cancel-btn" class="btn-secondary">Annulla</button>
+                    <button type="submit" class="btn-primary">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

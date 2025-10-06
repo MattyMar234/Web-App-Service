@@ -1,0 +1,13 @@
+/linktree-clone
+|-- app.py
+|-- database.py
+|-- static/
+|   |-- css/
+|   |   |-- styles.css
+|   |   |-- templates.css
+|   |-- js/
+|   |   |-- main.js
+|   |-- uploads/
+|-- templates/
+|   |-- index.html
+|-- requirements.txt
