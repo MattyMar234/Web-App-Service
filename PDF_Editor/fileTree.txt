@@ -1,0 +1,26 @@
+pdf_editor/
+├── app.py                 # Punto di ingresso per avviare il server
+├── config.py              # File di configurazione
+├── requirements.txt       # Dipendenze del progetto
+├── server.py              # La classe principale del Web Server
+│
+├── services/              # Cartella contenente tutti i servizi
+│   ├── __init__.py
+│   ├── merge/             # Servizio per unire PDF
+│   │   ├── __init__.py    # Definisce il Blueprint di Flask
+│   │   ├── operation.py   # La classe con la logica per unire i PDF
+│   │   └── routes.py      # Le rotte (endpoint) per il servizio
+│   │
+│   └── split/             # Servizio per dividere PDF
+│       ├── __init__.py
+│       ├── operation.py   # La classe con la logica per dividere i PDF
+│       └── routes.py      # Le rotte per il servizio
+│
+├── static/                # File statici (CSS, JS)
+│   └── style.css
+│
+└── templates/             # Template HTML
+    ├── base.html
+    ├── index.html         # Homepage con la lista dei servizi
+    ├── merge.html         # Pagina per il servizio di merge
+    └── split.html         # Pagina per il servizio di split

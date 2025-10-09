@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Home - PDF Editor{% endblock %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">Benvenuto nel tuo Editor PDF</h1>
+        <p class="col-md-8 fs-4">Scegli uno strumento qui sotto per iniziare a modificare i tuoi file PDF.</p>
+    </div>
+</div>
+
+<div class="row align-items-md-stretch">
+    {% for service in services %}
+    <div class="col-md-6 mb-4">
+        <div class="h-100 p-5 text-bg-dark rounded-3">
+            <h2>{{ service.name }}</h2>
+            <p>Usa questo strumento per eseguire l'operazione di {{ service.name.lower() }} sui tuoi file.</p>
+            <a href="{{ service.url }}" class="btn btn-outline-light">Apri {{ service.name }}</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
