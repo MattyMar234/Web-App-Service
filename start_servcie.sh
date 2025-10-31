@@ -12,23 +12,23 @@ set -e
 # === PROGETTO 1 ===
 PROJECT1_DIR="$HOME/Web-App-Service/WOL_WebService"
 # VENV1="$PROJECT1_DIR/.venv" # Non più necessario specificarlo qui
-SCRIPT1="$PROJECT1_DIR/src/main.py"
-RQ_PATH1="$PROJECT1_DIR/requirements.txt"
-ARGS1="--port 5001"
+SCRIPT1="$PROJECT1_DIR/V2/backend/server_flask.py"
+RQ_PATH1="$PROJECT1_DIR/V2/backend/requirements.txt"
+ARGS1="--port 8001"
 
 # === PROGETTO 2 ===
 PROJECT2_DIR="$HOME/Web-App-Service/Web_LinkTree"
 # VENV2="$PROJECT2_DIR/.venv" # Non più necessario specificarlo qui
 SCRIPT2="$PROJECT2_DIR/V2/backend/flask_server.py"
 RQ_PATH2="$PROJECT2_DIR/V2/backend/requirements.txt"
-ARGS2="--port 5002"
+ARGS2="--port 8000"
 
 # === PROGETTO 3 ===
 PROJECT3_DIR="$HOME/Web-App-Service/Whisper_Web_Interface"
 # VENV3="$PROJECT3_DIR/.venv" # Non più necessario specificarlo qui
 SCRIPT3="$PROJECT3_DIR/server.py"
 RQ_PATH3="$PROJECT3_DIR/V2/requirements.txt" # Controlla che questo percorso sia corretto
-ARGS3="--port 5003"
+ARGS3="--port 8002"
 
 
 # === FUNZIONE DI CONTROLLO DEGLI STRUMENTI DI SISTEMA ===
