@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1 data-testid="app-title">Link Manager</h1>
+                <div class="header-actions">
+                    <!-- Theme Toggle -->
+                    <button class="icon-btn" id="themeToggle" data-testid="theme-toggle-btn" title="Cambia tema">
+                        <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </svg>
+                        <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </button>
+                    
+                    <!-- Button Size Selector -->
+                    <select id="buttonSizeSelect" data-testid="button-size-select" class="size-select">
+                        <option value="120">Piccolo (120px)</option>
+                        <option value="150" selected>Medio (150px)</option>
+                        <option value="180">Grande (180px)</option>
+                        <option value="200">XL (200px)</option>
+                    </select>
+                    
+                    <!-- Edit Mode Toggle -->
+                    <button class="btn" id="editModeBtn" data-testid="edit-mode-btn">Modalità Modifica</button>
+                    
+                    <!-- Export Button -->
+                    <button class="icon-btn" id="exportBtn" data-testid="export-btn" title="Esporta">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </button>
+                    
+                    <!-- Import Button -->
+                    <button class="icon-btn" id="importBtn" data-testid="import-btn" title="Importa">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                    
+                    <!-- Add Link Button -->
+                    <button class="btn btn-primary" id="addLinkBtn" data-testid="add-link-btn">+ Aggiungi Link</button>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="links-grid" id="linksGrid" data-testid="links-grid">
+                <!-- Links will be dynamically added here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Add/Edit Link -->
+    <div class="modal" id="linkModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle" data-testid="modal-title">Aggiungi Link</h2>
+                <button class="close-btn" id="closeModal" data-testid="close-modal-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="linkForm">
+                    <div class="form-group">
+                        <label for="linkName">Nome Pulsante *</label>
+                        <input type="text" id="linkName" data-testid="link-name-input" required placeholder="Es. Google">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="linkUrl">URL *</label>
+                        <input type="url" id="linkUrl" data-testid="link-url-input" required placeholder="https://example.com">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="textColor">Colore Testo</label>
+                            <input type="color" id="textColor" data-testid="text-color-input" value="#ffffff">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="borderColor">Colore Bordo</label>
+                            <input type="color" id="borderColor" data-testid="border-color-input" value="#000000">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="useGradient" data-testid="use-gradient-checkbox">
+                            Usa Gradiente per Sfondo
+                        </label>
+                    </div>
+                    
+                    <div id="solidColorGroup" class="form-group">
+                        <label for="bgColor">Colore Sfondo</label>
+                        <input type="color" id="bgColor" data-testid="bg-color-input" value="#3b82f6">
+                    </div>
+                    
+                    <div id="gradientGroup" class="gradient-group" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="gradientColor1">Colore 1</label>
+                                <input type="color" id="gradientColor1" data-testid="gradient-color1-input" value="#3b82f6">
+                            </div>
+                            <div class="form-group">
+                                <label for="gradientColor2">Colore 2</label>
+                                <input type="color" id="gradientColor2" data-testid="gradient-color2-input" value="#8b5cf6">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="gradientAngle">Angolo Gradiente (0-360°)</label>
+                            <input type="number" id="gradientAngle" data-testid="gradient-angle-input" min="0" max="360" value="45">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fontFamily">Font</label>
+                        <select id="fontFamily" data-testid="font-family-select">
+                            <option value="Arial">Arial</option>
+                            <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
+                            <option value="Inter, sans-serif">Inter</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                            <option value="Georgia, serif">Georgia</option>
+                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            <option value="Verdana, sans-serif">Verdana</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn" id="cancelBtn" data-testid="cancel-btn">Annulla</button>
+                        <button type="submit" class="btn btn-primary" data-testid="submit-btn">Salva</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

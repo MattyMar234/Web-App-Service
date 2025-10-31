@@ -1,0 +1,42 @@
+{
+  "links": [
+    {
+      "borderColor": "#1f2937",
+      "fontFamily": "Arial",
+      "gradientAngle": 135,
+      "gradientColor1": "#882abb",
+      "gradientColor2": "#8b5cf6",
+      "id": "a7f10da8-7609-4182-bddd-ec767cb68ec7",
+      "name": "GitHub",
+      "textColor": "#ffffff",
+      "url": "https://github.com",
+      "useGradient": true
+    },
+    {
+      "bgColor": "#4285f4",
+      "borderColor": "#2563eb",
+      "fontFamily": "Arial",
+      "id": "268a4f2f-f923-4556-bec4-ece1b3debbc1",
+      "name": "Google",
+      "textColor": "#ffffff",
+      "url": "https://www.google.com",
+      "useGradient": false
+    },
+    {
+      "borderColor": "#000000",
+      "fontFamily": "Arial",
+      "gradientAngle": 45,
+      "gradientColor1": "#3b82f6",
+      "gradientColor2": "#8b5cf6",
+      "id": "84a5082e-fcf7-40ed-b780-3775aeeb9315",
+      "name": "YouTube",
+      "textColor": "#ffffff",
+      "url": "https://youtube.com",
+      "useGradient": true
+    }
+  ],
+  "settings": {
+    "theme": "light",
+    "buttonSize": 150
+  }
+}
