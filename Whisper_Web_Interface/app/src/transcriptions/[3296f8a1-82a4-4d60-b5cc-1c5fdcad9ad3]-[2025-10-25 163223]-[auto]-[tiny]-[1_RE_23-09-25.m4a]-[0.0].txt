@@ -1,0 +1,71 @@
+ Okay, so today I will give you a brief introduction to the course, okay, and we shall start with the other elections.
+ Okay, so the requirements, lots, all the things that we have said about the requirements, okay, so for instance,
+ all the requirements, all the stuff outside the software development fields.
+ Okay, so for instance, here we have an issue in the Chinese slide that says,
+ if you do not know, we have to go anywhere, we do, that seems reasonable, okay,
+ but I do not have any specific target anywhere we do.
+ Another more specific of program development of software development, is if you do not know what you want to achieve,
+ whatever program you will develop, we will be fine.
+ Okay, so the interesting point of these two statements is that they are true by themselves, okay,
+ but essentially, they are nonsense, okay, why?
+ Because we always add some good, especially when you build the software, you build software for a reason, okay,
+ except the start and some space we want to know about the development software,
+ just for the sake of this software itself, okay,
+ you add also the vehicles you want to use the software for some objective,
+ that typically is nothing to use at software, okay,
+ also the first sentence is not totally correct, okay, because if you go decide to go for a walk,
+ okay, even though you do not have a specific objective, anyway, you have some desires, okay,
+ you want to walk for instance, in playing instead of climbing, okay,
+ you want to walk in a place where maybe you can look at shopping windows, okay,
+ maybe you want to go in a place where there is public transportation, so if you are tired,
+ you can jump on a bus and go home by bus, okay, these are all requirements,
+ very often requirements are not expressed explicitly,
+ but that doesn't change the nature of requirements, they are there, okay,
+ and in fact, it will be your work, your job, to get the user quiet,
+ to extract these requirements from an environment,
+ be able to take all the regulations, whatever is relevant to the file,
+ therefore, okay, so what we will see now is that
+ they are still on a bus, okay, so the definition of official definition of app depots,
+ the still on a bus is online, we have an inorganine side,
+ which if I do not remember where it is just an inorganic document,
+ what it is, so there you can find that information on all the courses,
+ including this one, okay, and one of the first information that you find in the old page is
+ the link to the syllabus, so please have a look at the syllabus,
+ because we have to know with sufficient precision at what the course is.
+ Okay, this is an in fact the date of the course,
+ where the pages for all the courses are the same, so you have an analysis,
+ contain all my geography that I speak from the course and the designers, okay,
+ the description of the course is a different set of slides, okay,
+ and the scene of which is the official definition of structure
+ and formatted as required by the editors, okay, so what that objective is of this course.
+ The A is to provide students with the basic knowledge and either to perform requirements
+ in junior year, or by the way the requirements in junior year,
+ that means that there is a whole bunch of activities that form and the entire discipline,
+ which is the dictated two requirements, okay, so we talk about requirements in junior year.
+ Start in form requirements in the institution, also in our professional domains,
+ and if they go this form, we try to domains.
+ The institution means that you have to extract the knowledge about objectives,
+ about the environment, about Australian third, so much so on.
+ From people who work at a problem owner, okay, so going back to what we said before,
+ we marked a lot of software for the single software.
+ We killed software to solve the sum, okay, so you have to understand the problem,
+ okay, the requirements are the description of what we asked to do in order to solve
+ or at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at
+ least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
+ at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least, at least,
