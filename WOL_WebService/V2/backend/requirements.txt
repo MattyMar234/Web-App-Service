@@ -1,0 +1,10 @@
+flask==3.0.0
+flask-socketio==5.3.5
+flask-cors==4.0.0
+wakeonlan==3.1.0
+paramiko==3.4.0
+cryptography==42.0.8
+python-dotenv==1.0.1
+python-engineio==4.9.0
+python-socketio==5.11.0
+eventlet==0.35.2

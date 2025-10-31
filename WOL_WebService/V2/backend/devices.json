@@ -1,0 +1,15 @@
+[
+    {
+        "id": "a3c4dc97-e711-4876-8ca9-dd1096b8e290",
+        "name": "Proxmox Node1",
+        "mac": "2c:f0:5d:5e:17:3e",
+        "ip": "192.168.1.204",
+        "subnet": "255.255.255.0",
+        "port": 9,
+        "os_type": "linux",
+        "status": "offline",
+        "ssh": {
+            "enabled": false
+        }
+    }
+]

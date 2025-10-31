@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wake-on-LAN Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1><i class="fas fa-power-off"></i> Wake-on-LAN Manager</h1>
+                <div class="header-actions">
+                    <button id="themeToggle" class="btn-icon" title="Cambia tema">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="toolbar">
+            <button id="addDeviceBtn" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Aggiungi Dispositivo
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table id="devicesTable">
+                <thead>
+                    <tr>
+                        <th class="drag-handle-header"></th>
+                        <th>Nome</th>
+                        <th>MAC Address</th>
+                        <th>IP Address</th>
+                        <th>Subnet</th>
+                        <th>Porta</th>
+                        <th>OS</th>
+                        <th>Stato</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="devicesTableBody">
+                    <!-- Devices will be inserted here -->
+                </tbody>
+            </table>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-inbox"></i>
+                <p>Nessun dispositivo configurato</p>
+                <!-- <button class="btn btn-primary" onclick="document.getElementById('addDeviceBtn').click()">
+                    <i class="fas fa-plus"></i> Aggiungi il primo dispositivo
+                </button> -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per aggiungere/modificare dispositivo -->
+    <div id="deviceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Aggiungi Dispositivo</h2>
+                <button class="close-btn" onclick="closeDeviceModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="deviceForm">
+                <input type="hidden" id="deviceId" name="id">
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-desktop"></i> Informazioni Dispositivo</h3>
+                    
+                    <div class="form-group">
+                        <label for="deviceName">Nome *</label>
+                        <input type="text" id="deviceName" name="name" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="deviceMac">MAC Address *</label>
+                            <input type="text" id="deviceMac" name="mac" placeholder="AA:BB:CC:DD:EE:FF" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="deviceIp">IP Address</label>
+                            <input type="text" id="deviceIp" name="ip" placeholder="192.168.1.100">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="deviceSubnet">Subnet Mask</label>
+                            <input type="text" id="deviceSubnet" name="subnet" value="255.255.255.0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="devicePort">Porta WoL</label>
+                            <input type="number" id="devicePort" name="port" value="9" min="1" max="65535">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deviceOsType">Sistema Operativo</label>
+                        <select id="deviceOsType" name="os_type">
+                            <option value="linux">Linux</option>
+                            <option value="windows">Windows</option>
+                            <option value="macos">macOS</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>
+                        <i class="fas fa-terminal"></i> Configurazione SSH (Opzionale)
+                        <label class="switch">
+                            <input type="checkbox" id="sshEnabled" name="ssh_enabled">
+                            <span class="slider"></span>
+                        </label>
+                    </h3>
+                    
+                    <div id="sshConfig" style="display: none;">
+                        <div class="form-group">
+                            <label for="sshUsername">Username SSH *</label>
+                            <input type="text" id="sshUsername" name="ssh_username">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sshAuthMethod">Metodo di Autenticazione</label>
+                            <select id="sshAuthMethod" name="ssh_auth_method">
+                                <option value="password">Password</option>
+                                <option value="key">Chiave SSH</option>
+                            </select>
+                        </div>
+                        
+                        <div id="sshPasswordGroup" class="form-group">
+                            <label for="sshPassword">Password SSH *</label>
+                            <input type="password" id="sshPassword" name="ssh_password">
+                        </div>
+                        
+                        <div id="sshKeyGroup" class="form-group" style="display: none;">
+                            <label for="sshKey">Chiave Privata SSH *</label>
+                            <textarea id="sshKey" name="ssh_key" rows="6" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----\n..."></textarea>
+                        </div>
+                        
+                        <div id="sshKeyPassphraseGroup" class="form-group" style="display: none;">
+                            <label for="sshKeyPassphrase">Passphrase Chiave (se richiesta)</label>
+                            <input type="password" id="sshKeyPassphrase" name="ssh_key_passphrase">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeDeviceModal()">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

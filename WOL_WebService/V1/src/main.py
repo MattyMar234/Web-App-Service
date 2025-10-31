@@ -1,3 +1,4 @@
+import argparse
 import platform
 import subprocess
 import threading
@@ -103,7 +104,7 @@ def check_host_connectivity():
                     'status': device['status']
                 })
         
-        time.sleep(15)
+        time.sleep(10)
 
 def ssh_shutdown(hostname, username, auth_method, password=None, key_file=None, key_passphrase=None):
     """Esegue lo shutdown remoto via SSH"""
@@ -350,8 +351,15 @@ def handle_disconnect():
     logger.info(f"Client disconnected. Total connected: {HOST_CONNECTED}")
 
 def main() -> None:
+    
     global DEVICES_DICT
     global DEVICES_LIST
+    
+    parser = argparse.ArgumentParser(description='Avvia il server web Linktree Clone.')
+    parser.add_argument('--host', type=str, default='0.0.0.0', help="Indirizzo IP su cui il server è in ascolto. Default: '0.0.0.0'")
+    parser.add_argument('--port', type=int, default=8080, help='Porta su cui il server è in ascolto. Default: 8080')
+    args = parser.parse_args()
+
     
     # Inizializza file JSON se non esiste
     if not os.path.exists(DEVICE_FILE_PATH):
@@ -375,7 +383,8 @@ def main() -> None:
     connectivity_thread.start()
     
     # Avvia il server
-    socketio.run(app, debug=True, host='0.0.0.0', port=12345, allow_unsafe_werkzeug=True)
+    print(f"Avvio del server su http://{args.host}:{args.port}")
+    socketio.run(app, debug=True, host=args.host, pport=args.port, allow_unsafe_werkzeug=True)
 
 if __name__ == '__main__':
     main()
