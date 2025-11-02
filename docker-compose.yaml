@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  WebLinkTree:
+    build: 
+      context: .Web_LinkTree
+    container_name: WebLinkTree
+    ports:
+      - "8001:8080"
+    volumes:
+      - ./Web_LinkTree:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  WakeUpOnLan:
+    build: 
+      context: .WOL_WebService
+    container_name: WakeUpOnLan
+    ports:
+      - "8002:8080"
+    volumes:
+      - ./WOL_WebService:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  # whisper-app:
+  #   build:
+  #     context: .
+  #     dockerfile: dockerfile
+  #   container_name: WOL-wb-app
+  #   environment:
+  #     - DEBIAN_FRONTEND=noninteractive
+  #     - WHISPER_MODEL=medium
+  #   ports:
+  #     - "12345:12345"
+  #     - "12346:12346"
+  #   volumes:
+  #     - .:/app
+  #   restart: unless-stopped
+  #   command: ["/start.sh"]
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
