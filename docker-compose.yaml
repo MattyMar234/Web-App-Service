@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  WebLinkTree:
+  web_link_tree:
     build: 
-      context: .Web_LinkTree
+      context: ./Web_LinkTree
     container_name: WebLinkTree
     ports:
       - "8001:8080"
@@ -13,9 +13,9 @@ services:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
 
-  WakeUpOnLan:
+  wake_up_on_lan:
     build: 
-      context: .WOL_WebService
+      context: ./WOL_WebService
     container_name: WakeUpOnLan
     ports:
       - "8002:8080"
