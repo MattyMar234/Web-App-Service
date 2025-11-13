@@ -223,6 +223,11 @@ def scrape_musescore(url, task_id, step_pixels=600, step_delay=0.6, end_pause=2.
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--headless=new")
+        
+        chrome_options.add_argument('--ignore-certificate-errors')
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
 
         # browser_version = get_chromium_version()
         # logging.info(f"Versione di Chromium rilevata: {browser_version}")
