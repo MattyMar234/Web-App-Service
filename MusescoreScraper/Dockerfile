@@ -3,22 +3,22 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    gcc \
-    libcairo2-dev \
-    pkg-config \
-    libfreetype6-dev \
-    libffi-dev \
-    libjpeg-dev \
-    zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y \
-    chromium \
-    libnss3 \
-    libgconf-2-4 \
-    libfontconfig1 \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update
+RUN apt-get install -y gcc
+RUN apt-get install -y libcairo2-dev
+RUN apt-get install -y pkg-config
+RUN apt-get install -y libfreetype6-dev
+RUN apt-get install -y libffi-dev
+RUN apt-get install -y libjpeg-dev
+RUN apt-get install -y zlib1g-dev
+
+RUN apt-get install -y libnss3
+#RUN apt-get install -y libgconf-2-4
+RUN apt-get install -y libfontconfig1
+RUN apt-get install -y chromium
+RUN apt-get install -y chromium
+RUN rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
