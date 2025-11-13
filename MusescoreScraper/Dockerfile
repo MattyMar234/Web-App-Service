@@ -18,7 +18,6 @@ RUN apt-get update && apt-get install -y \
     libnss3 \
     libgconf-2-4 \
     libfontconfig1 \
-    --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
