@@ -6,6 +6,7 @@ import threading
 import time
 from datetime import datetime
 import uuid
+import subprocess
 
 # Importa le funzioni dal tuo script
 from typing import Dict, Final, List
@@ -81,6 +82,27 @@ def cleanup_old_files_and_status():
     for task_id in statuses_to_remove:
         del download_status[task_id]
         logging.info(f"Rimosso stato di download scaduto: {task_id}")
+
+def get_chromium_version():
+    """Esegue un comando di sistema per trovare la versione di Chromium."""
+    try:
+        # Esegui il comando sapendo che l'eseguibile è 'chromium'
+        result = subprocess.run(
+            ['chromium', '--version'], 
+            capture_output=True, 
+            text=True, 
+            check=True
+        )
+        version_output = result.stdout
+        
+    except subprocess.CalledProcessError as e:
+        # Se il browser è stato installato, ma non è accessibile o non funziona
+        raise RuntimeError("Chromium trovato, ma il comando '--version' ha fallito.") from e
+    
+    # Estrae la versione (il secondo elemento della stringa)
+    version_string = version_output.split(' ')[1].strip()
+    return version_string
+
 
 # --- Funzioni di Download e Elaborazione ---
 def ensure_music_folder():
@@ -201,7 +223,13 @@ def scrape_musescore(url, task_id, step_pixels=600, step_delay=0.6, end_pause=2.
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--headless=new")
 
-        driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
+        browser_version = get_chromium_version()
+        logging.info(f"Versione di Chromium rilevata: {browser_version}")
+
+        driver = webdriver.Chrome(
+            service=ChromeService(ChromeDriverManager(version=browser_version).install()), 
+            options=chrome_options
+        )
         driver.get(url)
 
         wait = WebDriverWait(driver, 20)
