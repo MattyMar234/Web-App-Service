@@ -48,7 +48,13 @@ def detectScoreType_from_url_or_header(url, headers):
 def downloadScore(src, saveName, score_num):
     folder = ensure_music_folder()
     try:
-        r = requests.get(src, stream=True, timeout=20)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/118.0.5993.90 Safari/537.36",
+        }
+
+        r = requests.get(src, stream=True, timeout=20, headers=headers)
     except Exception as e:
         print(f"[!] Errore request per {src}: {e}")
         return False
@@ -75,6 +81,8 @@ def downloadScore(src, saveName, score_num):
     with open(raw_path, 'wb') as f:
         f.write(r.content)
 
+
+
     # convert to pdf
     pdf_path = os.path.join(folder, base_name + '.pdf')
     try:
@@ -85,6 +93,11 @@ def downloadScore(src, saveName, score_num):
         else:  # png / jpg
             im = Image.open(raw_path)
             im = im.convert('RGB')
+
+            scale = 2  # moltiplica dimensioni
+            w, h = im.size
+            im = im.resize((w*scale, h*scale), Image.LANCZOS)
+            
             im.save(pdf_path)
             im.close()
             os.remove(raw_path)
@@ -174,7 +187,7 @@ def scrape_musescore(url,
         for im in imgs:
             src = im.get_attribute("src")
             if src and (".png?" in src.lower() or ".png@0?" in src.lower() or ".svg?" in src.lower() or ".svg@0?" in src.lower() or ".jpg?" in src.lower()):
-                imgs_urls.add(src)
+                imgs_urls.add(src.replace("@0", ""))  # rimuovi eventuale @0
 
     print("[⏳] Inizio scorrimento progressivo verso il basso")
     total_height = height_of_scroller()
