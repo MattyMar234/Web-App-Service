@@ -11,7 +11,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPDF
-from PIL import Image
+from PIL import Image, ImageFilter
 from PyPDF2 import PdfMerger
 
 import os
@@ -97,6 +97,9 @@ def downloadScore(src, saveName, score_num):
             scale = 2  # moltiplica dimensioni
             w, h = im.size
             im = im.resize((w*scale, h*scale), Image.LANCZOS)
+            
+            im = im.filter(ImageFilter.SHARPEN)
+            #im = im.filter(ImageFilter.SHARPEN)
             
             im.save(pdf_path)
             im.close()
@@ -241,6 +244,8 @@ imgs = scrape_musescore("https://musescore.com/user/14645141/scores/3311646",
                             step_pixels=500,
                             step_delay=0.8,
                             end_pause=2.5)
+
+imgs.sort(key=lambda x: int(x.split("score_")[1].split(".")[0]))
 
 # Ora puoi usare la lista 'imgs' per scaricare le immagini
 # Ad esempio:
