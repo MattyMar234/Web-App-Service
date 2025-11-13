@@ -18,6 +18,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import StaleElementReferenceException 
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPDF
 from PIL import Image, ImageFilter
@@ -269,11 +270,26 @@ def scrape_musescore(url, task_id, step_pixels=600, step_delay=0.6, end_pause=2.
         imgs_urls = set()
 
         def find_score_imgs():
-            imgs = scroller.find_elements(By.CSS_SELECTOR, 'img.MHaWn')
-            for im in imgs:
-                src = im.get_attribute("src")
-                if src and (".png?" in src.lower() or ".png@0?" in src.lower() or ".svg?" in src.lower() or ".svg@0?" in src.lower() or ".jpg?" in src.lower()):
-                    imgs_urls.add(src.replace("@0", ""))
+            # imgs = scroller.find_elements(By.CSS_SELECTOR, 'img.MHaWn')
+            # for im in imgs:
+            #     src = im.get_attribute("src")
+            #     if src and (".png?" in src.lower() or ".png@0?" in src.lower() or ".svg?" in src.lower() or ".svg@0?" in src.lower() or ".jpg?" in src.lower()):
+            #         imgs_urls.add(src.replace("@0", ""))
+            try:
+                imgs = scroller.find_elements(By.CSS_SELECTOR, 'img.MHaWn')
+                for im in imgs:
+                    try:
+                        src = im.get_attribute("src")
+                        if src and (".png?" in src.lower() or ".png@0?" in src.lower() or ".svg?" in src.lower() or ".svg@0?" in src.lower() or ".jpg?" in src.lower()):
+                            imgs_urls.add(src.replace("@0", ""))
+                    except StaleElementReferenceException:
+                        # L'elemento è diventato obsoleto mentre stavamo processandolo.
+                        # Non è un problema critico, lo ignoriamo e continuiamo.
+                        logging.debug("Rilevato un elemento stale durante l'iterazione, lo salto.")
+                        continue
+            except Exception as e:
+                # Gestisce altri possibili errori, come il container che non è più presente
+                logging.warning(f"Errore durante la ricerca delle immagini: {e}")
 
         download_status[task_id] = {"status": "processing", "progress": 20, "message": "Ricerca delle immagini..."}
         
