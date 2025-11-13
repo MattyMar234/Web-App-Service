@@ -8,7 +8,7 @@ services:
     ports:
       - "8001:8080"
     volumes:
-      - ./Web_LinkTree:/app
+      - ./volumes/Web_LinkTree:/app
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
@@ -20,7 +20,7 @@ services:
     ports:
       - "8002:8080"
     volumes:
-      - ./WOL_WebService:/app
+      - ./volumes/WOL_WebService:/app
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
@@ -32,7 +32,7 @@ services:
     ports:
       - "8003:8080"
     volumes:
-      - ./MuseScore_Scraper:/app
+      - ./volumes/MuseScore_Scraper:/app
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
