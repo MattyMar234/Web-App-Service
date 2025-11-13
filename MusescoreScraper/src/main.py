@@ -1,5 +1,6 @@
 import argparse
 import logging
+from platform import system
 from flask import Flask, render_template, request, jsonify, send_file
 import os
 import threading
@@ -86,7 +87,7 @@ def cleanup_old_files_and_status():
 def get_chromium_version():
     """Esegue un comando di sistema per trovare la versione di Chromium."""
     try:
-        # Esegui il comando sapendo che l'eseguibile è 'chromium'
+        return "114.0.5735.90"       
         result = subprocess.run(
             ['chromium', '--version'], 
             capture_output=True, 
@@ -223,11 +224,15 @@ def scrape_musescore(url, task_id, step_pixels=600, step_delay=0.6, end_pause=2.
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--headless=new")
 
-        browser_version = get_chromium_version()
-        logging.info(f"Versione di Chromium rilevata: {browser_version}")
+        # browser_version = get_chromium_version()
+        # logging.info(f"Versione di Chromium rilevata: {browser_version}")
 
-        driver = webdriver.Chrome(
-            service=ChromeService(ChromeDriverManager(version=browser_version).install()), 
+        # driver = webdriver.Chrome(
+        #     service=ChromeService(ChromeDriverManager(version="114.0.5735.90").install()), 
+        #     options=chrome_options
+        # )
+        driver = webdriver.Remote(
+            command_executor='http://selenium_hub:4444/wd/hub',
             options=chrome_options
         )
         driver.get(url)

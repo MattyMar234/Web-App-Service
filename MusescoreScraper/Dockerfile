@@ -16,8 +16,7 @@ RUN apt-get install -y zlib1g-dev
 RUN apt-get install -y libnss3
 #RUN apt-get install -y libgconf-2-4
 RUN apt-get install -y libfontconfig1
-RUN apt-get install -y chromium
-RUN apt-get install -y chromium
+RUN apt-get install -y chromium=114.0.5735.90-1~deb11u1
 RUN rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

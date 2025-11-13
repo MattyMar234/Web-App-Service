@@ -24,7 +24,24 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
+    
 
+  selenium_node:
+    image: selenium/node-chrome:114.0 # Sostituisci con la versione esatta se necessario
+    shm_size: 2g # Aumenta la memoria condivisa (essenziale per Chrome in Docker)
+    
+    environment:
+      # Collega il nodo a un hub, essenziale per il funzionamento del node
+      - SE_EVENT_BUS_HOST=selenium_hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  selenium_hub:
+    image: selenium/hub:114.0
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444" # Porta standard di accesso al Grid
   musescore-scraper:
     build: 
       context: ./MusescoreScraper
@@ -36,7 +53,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
-
+    depends_on:
+      - selenium_hub 
+      - selenium_node
   # whisper-app:
   #   build:
   #     context: .
