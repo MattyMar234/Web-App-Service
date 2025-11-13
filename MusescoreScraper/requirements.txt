@@ -1,0 +1,12 @@
+musescore-scraper
+
+pip install selenium
+pip install webdriver_manager
+pip install svglib
+pip install PyPDF2
+
+beautifulsoup4
+svglib
+reportlab
+img2pdf
+requests
