@@ -10,3 +10,5 @@ svglib
 reportlab
 img2pdf
 requests
+
+pip install flask selenium webdriver-manager svglib reportlab pillow PyPDF2 requests
