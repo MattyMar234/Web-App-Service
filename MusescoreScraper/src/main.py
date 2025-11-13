@@ -39,7 +39,7 @@ logging.basicConfig(
 
 # --- Configurazione dell'Applicazione Flask ---
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = './downloads'
+app.config['UPLOAD_FOLDER'] = '/app/downloads' 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Assicurati che la cartella di download esista
@@ -57,27 +57,13 @@ def cleanup_old_files_and_status():
     
     logging.info("Avvio del processo di pulizia periodica...")
     now = time.time()
-    
-    # Soglia di 1 ora (3600 secondi)
-    time_threshold = now - DELATE_TINME_SECONDS 
+    time_threshold = now - DELATE_TINME_SECONDS
 
-    # Pulizia dei file PDF
-    try:
-        for filename in os.listdir(app.config['UPLOAD_FOLDER']):
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            if os.path.isfile(file_path):
-                # Controlla se il file è più vecchio della soglia
-                if os.path.getctime(file_path) < time_threshold:
-                    os.remove(file_path)
-                    logging.info(f"Rimosso file vecchio: {file_path}")
-    except Exception as e:
-        logging.error(f"Errore durante la pulizia dei file: {e}")
-
-    # Pulizia degli stati di download per evitare memory leak
+    # Pulizia degli stati di download
     statuses_to_remove = []
     for task_id, data in download_status.items():
-        # Rimuovi gli stati completati o con errore da più di un'ora
-        if data.get('status') in ['completed', 'error'] and os.path.getctime(file_path) < time_threshold:
+        # Controlla se il timestamp esiste ed è scaduto
+        if data.get('status') in ['completed', 'error'] and data.get('timestamp', 0) < time_threshold:
              statuses_to_remove.append(task_id)
     
     for task_id in statuses_to_remove:
@@ -440,5 +426,8 @@ if __name__ == '__main__':
     # Start server
     logging.info(f"Starting server on http://localhost:{args.port}")
     logging.info(f"Allowed IP: {args.host}")
+    
+    cleanup_thread = threading.Thread(target=cleanup_old_files_and_status, daemon=True)
+    cleanup_thread.start()
     
     app.run(debug=True, host=args.host, port=args.port)
