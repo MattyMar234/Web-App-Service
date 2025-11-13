@@ -1,14 +1,21 @@
-musescore-scraper
+# musescore-scraper
 
-pip install selenium
-pip install webdriver_manager
-pip install svglib
-pip install PyPDF2
+# pip install selenium
+# pip install webdriver_manager
+# pip install svglib
+# pip install PyPDF2
 
-beautifulsoup4
+# beautifulsoup4
+# svglib
+# reportlab
+# img2pdf
+# requests
+
+flask
+selenium
+webdriver-manager
 svglib
 reportlab
-img2pdf
+pillow
+PyPDF2
 requests
-
-pip install flask selenium webdriver-manager svglib reportlab pillow PyPDF2 requests

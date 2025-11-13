@@ -25,6 +25,18 @@ services:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
 
+  musescore-scraper:
+    build: 
+      context: ./MusescoreScraper
+    container_name: MuseScoreScraper
+    ports:
+      - "8003:8080"
+    volumes:
+      - ./MuseScore_Scraper:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
   # whisper-app:
   #   build:
   #     context: .
