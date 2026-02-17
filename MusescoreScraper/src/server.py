@@ -99,8 +99,11 @@ class FlaskServer:
         
         #verifico se ho più url separati da virgola
         urls = [url.strip() for url in re.split(r'\s*,\s*', url) if url.strip()]
+        print(f"Richiesta di download ricevuta per URL: {urls} con scale={scale} e sharpen_count={sharpen_count}")
         
-        threads = [threading.Thread(target=self._background_task, args=(url, task_id, scale, sharpen_count)) for url in urls]
+        ids = [str(uuid.uuid4()) for _ in urls]
+        
+        threads = [threading.Thread(target=self._background_task, args=(url, ids[i], scale, sharpen_count)) for i, url in enumerate(urls)]
         
         # Avvia il thread di background passando 'self' per accedere ai metodi e attributi
         for thread in threads:
@@ -109,7 +112,7 @@ class FlaskServer:
         
         self._broadcast_update()
         
-        return jsonify({"task_id": task_id})
+        return jsonify({"task_ids": ids})
 
     def status(self, task_id):
         if task_id in self.download_status:

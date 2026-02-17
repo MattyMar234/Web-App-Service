@@ -13,7 +13,7 @@ logging.basicConfig(
     ]
 )
 
-DELATED_TIME_SECONDS: Final[int] = 55 #2400  # 40 minute
+DELATED_TIME_SECONDS: Final[int] = 120 #2400  # 40 minute
 FILE_SCAN_INTERVAL_SECONDS: Final[int] = 60  # 1 minute
 FILE_MAX_SIZE_BYTE: Final[int] = 16 * 1024 * 1024  # 16MB max file size
 MAX_FILES_IN_FOLDER: Final[int] = 32  # Max number of files in the download folder before cleanup
