@@ -5,7 +5,7 @@ import os
 import threading
 import uuid
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from typing import Callable, Dict, Optional, Tuple, List
 
 from global_vars import *
 
@@ -32,8 +32,9 @@ class FileRecord:
     
 class GarbageCollector:
     
-    def __init__(self, db_manager: 'DataBaseManager', download_path: str, scan_interval_s: int = 60, delated_time_s: int = 1200):
+    def __init__(self, db_manager: 'DataBaseManager', on_update_func: Callable, download_path: str, scan_interval_s: int = 60, delated_time_s: int = 1200):
         self.__db_manager = db_manager
+        self.__on_update_func = on_update_func
         self.__download_path = download_path
         self.__scan_interval_s = scan_interval_s
         self.__delated_time_s = delated_time_s
@@ -57,6 +58,8 @@ class GarbageCollector:
     def perform_garbage_collection(self):
         """Esegue una singola iterazione di pulizia, rimuovendo i file obsoleti."""
         
+        elements_removed = False
+        
         with self.__lock:
             
             #verifico entry senza file fisico e rimuovo dal database per evitare accumulo di entry orfane
@@ -67,6 +70,9 @@ class GarbageCollector:
                 if not os.path.exists(file_path):
                     logging.warning(f"File fisico mancante per entry '{file.file_name}' - Rimuovendo entry dal database.")
                     entry_to_remove.append(file.file_name)
+            
+            if len(entry_to_remove) > 0:
+                elements_removed = True
             
             for file_name in entry_to_remove:
                 self.__db_manager.remove_file(file_name)
@@ -88,6 +94,7 @@ class GarbageCollector:
                         try:
                             logging.info(f"Rimuovendo file obsoleto: {pth_to_remove}")
                             os.remove(pth_to_remove)
+                            elements_removed = True
                         except OSError as e:
                             logging.error(f"Errore durante la rimozione del file '{pth_to_remove}': {e}")
                     
@@ -97,7 +104,10 @@ class GarbageCollector:
                     break  # Il file più vecchio non è ancora scaduto
                 
                 oldest_file = self.__db_manager.get_oldest_file()  # Controlla il prossimo file più vecchio
-            
+        
+        if elements_removed:
+            logging.info("Garbage collection completata - Database aggiornato.")
+            self.__on_update_func()  # Notifica il server per aggiornare lo stato     
         
     def __run_cleanup_loop(self):
         """Loop che esegue periodicamente la pulizia dei file obsoleti."""

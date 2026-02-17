@@ -40,7 +40,7 @@
         .card {
             border: none;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 2rem;
         }
 
@@ -63,6 +63,7 @@
             box-shadow: 0 0 0 0.2rem rgba(58, 156, 255, 0.25);
         }
 
+
         /* Pulsante Principale (Scarica Spartito) */
         .btn-primary-custom {
             background-color: #3a9cff;
@@ -83,35 +84,43 @@
             border-color: #a0c9ff;
         }
 
-        /* Tabella */
+        /* Tabella Styles */
         .table th {
             font-weight: 600;
             color: #555;
             border-bottom: 2px solid #dee2e6;
+            font-size: 0.9rem;
         }
 
         .table td {
             vertical-align: middle;
+            font-size: 0.9rem;
         }
 
-        /* Status Badges */
+         /* Status Badges - Colori Migliorati */
         .status-badge {
-            padding: .3em .6em;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: 500;
+            padding: .35em .65em;
+            border-radius: 50rem; /* Pil shape */
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .bg-analyzing { background-color: #17a2b8; color: white; }
-        .bg-downloading { background-color: #ffc107; color: #212529; }
-        .bg-processing { background-color: #6c757d; color: white; }
-        .bg-completed { background-color: #28a745; color: white; }
-        .bg-error { background-color: #dc3545; color: white; }
+        .bg-analyzing { background-color: #e7f1ff; color: #0d6efd; border: 1px solid #b6d4fe; } /* Blu Chiaro */
+        .bg-downloading { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; } /* Giallo */
+        .bg-processing { background-color: #f3e5f5; color: #7b1fa2; border: 1px solid #e1bee7; } /* Viola */
+        .bg-completed { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; } /* Verde */
+        .bg-error { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; } /* Rosso */
 
         /* Icone azioni tabella */
         .action-btn {
-            padding: 0.25rem 0.5rem;
-            font-size: 1.1rem;
-            line-height: 1;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
             border-radius: 4px;
         }
     </style>
@@ -177,8 +186,14 @@
         <!-- History Table Card -->
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-clock-history me-2"></i>Storico Download</span>
-                <button class="btn btn-sm btn-outline-secondary" onclick="fetchRecords()" title="Aggiorna">
+                <div>
+                    <span><i class="bi bi-clock-history me-2"></i>Storico Download</span>
+                    <span id="connStatus" class="connection-status text-success">
+                        <i class="bi bi-broadcast"></i> Live
+                    </span>
+                </div>
+                <!-- Il pulsante manuale non è più necessario con SSE, ma utile come fallback -->
+                <button class="btn btn-sm btn-outline-secondary" onclick="fetchRecordsManual()" title="Ricarica Manualmente">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
             </div>
@@ -187,16 +202,18 @@
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>Nome File</th>
-                                <th>Dimensione</th>
+                                <th>File</th>
+                                <th>Dim.</th>
                                 <th>Stato</th>
+                                <th>Scala</th>
+                                <th>Filtro</th>
                                 <th>Fonte</th>
                                 <th>Data</th>
-                                <th style="width: 100px;">Azioni</th>
+                                <th style="width: 80px;">Azioni</th>
                             </tr>
                         </thead>
                         <tbody id="recordsTable">
-                            <!-- Contenuto dinamico -->
+                            <tr><td colspan="8" class="text-center text-muted p-4">Caricamento...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -211,20 +228,148 @@
         const recordsTable = document.getElementById('recordsTable');
         const downloadForm = document.getElementById('downloadForm');
         const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
         const btnSubmit = document.getElementById('btnSubmit');
+        const connStatus = document.getElementById('connStatus');
 
-        // --- Gestione Form ---
+        // --- GESTIONE REAL-TIME (SSE) ---
+        function connectEventSource() {
+            const es = new EventSource("/stream");
+            
+            es.onopen = function() {
+                connStatus.innerHTML = '<i class="bi bi-broadcast"></i> Live';
+                connStatus.className = "connection-status text-success";
+            };
+
+            es.onmessage = function(event) {
+                // Il server invia direttamente la lista dei record in JSON
+                try {
+                    const records = JSON.parse(event.data);
+                    renderTable(records);
+                } catch (e) {
+                    console.error("Errore parsing dati SSE:", e);
+                }
+            };
+
+            es.onerror = function() {
+                connStatus.innerHTML = '<i class="bi bi-broadcast"></i> Disconnesso';
+                connStatus.className = "connection-status text-danger";
+                // Tentativo di riconnessione automatico gestito dal browser, ma chiudiamo e riapriamo per sicurezza
+                // es.close();
+                // setTimeout(connectEventSource, 5000);
+            };
+        }
+
+        // Avvia connessione SSE al caricamento
+        document.addEventListener('DOMContentLoaded', connectEventSource);
+
+        // Funzione manuale di fallback (chiamata dal pulsante)
+        async function fetchRecordsManual() {
+            try {
+                const response = await fetch('/records');
+                const records = await response.json();
+                renderTable(records);
+            } catch (e) {
+                console.error("Errore caricamento manuale", e);
+            }
+        }
+
+        // --- LOGICA TABELLA ---
+        function formatSize(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024; const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function mapStatus(status) {
+            const s = (status || "").toLowerCase();
+            const map = {
+                'analyzing': { class: 'bg-analyzing', text: 'Analisi' },
+                'downloading_pages': { class: 'bg-downloading', text: 'Download' },
+                'processing': { class: 'bg-processing', text: 'Elaborazione' },
+                'completed': { class: 'bg-completed', text: 'Completato' },
+                'error': { class: 'bg-error', text: 'Errore' }
+            };
+            return map[s] || { class: 'bg-secondary', text: status };
+        }
+
+        function renderTable(records) {
+            recordsTable.innerHTML = '';
+            if (records.length === 0) {
+                recordsTable.innerHTML = '<tr><td colspan="8" class="text-center text-muted p-4">Nessun download presente.</td></tr>';
+                return;
+            }
+
+            records.forEach(record => {
+                const fileId = record.file_name.replace('spartito_', '').replace('.pdf', '');
+                const currentStatus = (record.status || "").toLowerCase();
+                const isCompleted = (currentStatus === 'completed');
+                const statusInfo = mapStatus(record.status);
+                
+                let actionsHtml = '<div class="d-flex gap-1">';
+                if (isCompleted) {
+                    actionsHtml += `
+                        <button class="btn btn-sm btn-outline-success action-btn" onclick="downloadFile('${fileId}')" title="Scarica">
+                            <i class="bi bi-download"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger action-btn" onclick="deleteFile('${fileId}')" title="Elimina">
+                            <i class="bi bi-trash"></i>
+                        </button>`;
+                } else {
+                    actionsHtml += `
+                        <button class="btn btn-sm btn-outline-danger action-btn" onclick="deleteFile('${fileId}')" title="Elimina">
+                            <i class="bi bi-trash"></i>
+                        </button>`;
+                }
+                actionsHtml += '</div>';
+
+                const shortUrl = record.source_url.length > 20 
+                    ? record.source_url.substring(0, 20) + '...' 
+                    : record.source_url;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><code class="small text-dark">${record.file_name}</code></td>
+                    <td>${formatSize(record.size)}</td>
+                    <td><span class="status-badge ${statusInfo.class}">${statusInfo.text}</span></td>
+                    <td>${record.scale || '-'}</td>
+                    <td>${record.filter || '-'}</td>
+                    <td><a href="${record.source_url}" target="_blank" class="text-decoration-none">${shortUrl} <i class="bi bi-box-arrow-up-right small"></i></a></td>
+                    <td>${new Date(record.created_at).toLocaleDateString('it-IT')}</td>
+                    <td>${actionsHtml}</td>
+                `;
+                recordsTable.appendChild(row);
+            });
+        }
+
+        // --- AZIONI UTENTE ---
+        
+        // Download File
+        function downloadFile(fileId) {
+            window.location.href = `/download_file/${fileId}`;
+        }
+
+        // Elimina File (ora non serve più ricaricare manualmente la tabella, ci penserà il broadcast)
+        async function deleteFile(fileId) {
+            if (!confirm("Sei sicuro di voler eliminare questo file?")) return;
+            try {
+                // Il backend invierà automaticamente l'aggiornamento via SSE
+                await fetch(`/delete/${fileId}`, { method: 'POST' });
+            } catch (err) {
+                alert("Errore di rete.");
+            }
+        }
+
+        // Submit Form
         downloadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const url = document.getElementById('url').value;
             const scale = document.getElementById('scale').value;
             const sharpen_count = document.getElementById('sharpen_count').value;
 
             btnSubmit.disabled = true;
-            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Avvio...';
+            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Avvio...';
 
             try {
                 const response = await fetch('/download', {
@@ -237,13 +382,13 @@
                 
                 if (data.task_id) {
                     progressContainer.style.display = 'block';
-                    pollStatus(data.task_id);
+                    pollStatus(data.task_id); // Mantiene il polling per la progress bar specifica
                 } else {
                     alert("Errore: " + (data.error || "Impossibile avviare il task"));
                     resetFormUI();
                 }
             } catch (err) {
-                alert("Errore di connessione al server.");
+                alert("Errore di connessione.");
                 resetFormUI();
             }
         });
@@ -253,154 +398,32 @@
             btnSubmit.innerHTML = '<i class="bi bi-download me-2"></i>Scarica Spartito';
         }
 
+        // Polling per la progress bar del task corrente
         function pollStatus(taskId) {
             const interval = setInterval(async () => {
                 try {
                     const res = await fetch(`/status/${taskId}`);
                     const data = await res.json();
-
-                    // Gestione stati not_found o completati
                     if (data.status === 'not_found') {
-                        clearInterval(interval);
-                        fetchRecords();
-                        resetFormUI();
-                        progressContainer.style.display = 'none';
-                        return;
+                        clearInterval(interval); resetFormUI(); progressContainer.style.display = 'none'; return;
                     }
 
-                    // Aggiornamento UI Progress
                     let statusText = mapStatus(data.status).text;
                     progressText.innerText = `Stato: ${statusText}`;
-                    
-                    // Indeterminato durante l'elaborazione
-                    progressBar.style.width = '100%';
-                    progressBar.classList.add('progress-bar-striped', 'progress-bar-animated');
 
                     if (data.status === 'completed' || data.status === 'error') {
                         clearInterval(interval);
                         setTimeout(() => {
                             progressContainer.style.display = 'none';
                             resetFormUI();
-                            fetchRecords();
+                            // Non serve fetchRecords qui: l'SSE aggiornerà la tabella automaticamente
                         }, 1000);
                     }
                 } catch (err) {
-                    console.error(err);
-                    clearInterval(interval);
+                    console.error(err); clearInterval(interval);
                 }
             }, 2000);
         }
-
-        // --- Gestione Tabella Records ---
-
-        function formatSize(bytes) {
-            if (!bytes || bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        function mapStatus(status) {
-            const map = {
-                'ANALYZING': { class: 'bg-analyzing', text: 'Analisi' },
-                'DOWNLOADING_PAGES': { class: 'bg-downloading', text: 'Download' },
-                'PROCESSING': { class: 'bg-processing', text: 'Elaborazione' },
-                'COMPLETED': { class: 'bg-completed', text: 'Completato' },
-                'ERROR': { class: 'bg-error', text: 'Errore' }
-            };
-            return map[status] || { class: 'bg-secondary', text: status };
-        }
-
-        async function fetchRecords() {
-            try {
-                const response = await fetch('/records');
-                const records = await response.json();
-                
-                recordsTable.innerHTML = '';
-
-                if (records.length === 0) {
-                    recordsTable.innerHTML = '<tr><td colspan="6" class="text-center text-muted p-4">Nessun download presente.</td></tr>';
-                    return;
-                }
-
-                records.forEach(record => {
-                    const fileId = record.file_name.replace('spartito_', '').replace('.pdf', '');
-                    const isCompleted = record.status === 'COMPLETED';
-                    const statusInfo = mapStatus(record.status);
-                    
-                    const row = document.createElement('tr');
-                    
-                    // Cella Azioni
-                    let actionsHtml = `
-                        <div class="btn-group" role="group">
-                            <!-- Pulsante Download (Icona) -->
-                            <button class="btn btn-outline-success action-btn" 
-                                    onclick="downloadFile('${fileId}')" 
-                                    title="Scarica PDF"
-                                    ${!isCompleted ? 'disabled' : ''}>
-                                <i class="bi bi-download"></i>
-                            </button>
-                            <!-- Pulsante Elimina (Icona) -->
-                            <button class="btn btn-outline-danger action-btn" 
-                                    onclick="deleteFile('${fileId}', this)" 
-                                    title="Elimina">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    `;
-
-                    row.innerHTML = `
-                        <td><code class="small">${record.file_name}</code></td>
-                        <td>${formatSize(record.size)}</td>
-                        <td><span class="status-badge ${statusInfo.class}">${statusInfo.text}</span></td>
-                        <td>
-                            <a href="${record.source_url}" target="_blank" class="text-truncate d-inline-block" style="max-width: 150px;" title="${record.source_url}">
-                                ${record.source_url}
-                            </a>
-                        </td>
-                        <td>${new Date(record.created_at).toLocaleString('it-IT', {dateStyle: 'short', timeStyle: 'short'})}</td>
-                        <td>${actionsHtml}</td>
-                    `;
-                    recordsTable.appendChild(row);
-                });
-            } catch (err) {
-                console.error("Errore caricamento records:", err);
-                recordsTable.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Errore caricamento dati.</td></tr>';
-            }
-        }
-
-        function downloadFile(fileId) {
-            window.location.href = `/download_file/${fileId}`;
-        }
-
-        async function deleteFile(fileId, btnElement) {
-            if (!confirm("Sei sicuro di voler eliminare questo file?")) return;
-
-            const originalHtml = btnElement.innerHTML;
-            btnElement.disabled = true;
-            btnElement.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
-            try {
-                const response = await fetch(`/delete/${fileId}`, { method: 'POST' });
-                const data = await response.json();
-                
-                if (data.success) {
-                    fetchRecords(); 
-                } else {
-                    alert("Errore eliminazione: " + data.error);
-                    btnElement.disabled = false;
-                    btnElement.innerHTML = originalHtml;
-                }
-            } catch (err) {
-                alert("Errore di rete.");
-                btnElement.disabled = false;
-                btnElement.innerHTML = originalHtml;
-            }
-        }
-
-        // Init
-        document.addEventListener('DOMContentLoaded', fetchRecords);
     </script>
 </body>
 </html>

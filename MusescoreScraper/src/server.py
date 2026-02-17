@@ -1,4 +1,8 @@
-from flask import Flask, Response, render_template, request, jsonify, send_file
+import json
+import queue
+import re
+
+from flask import Flask, Response, render_template, request, jsonify, send_file, stream_with_context
 from typing import Any, Dict, Final, List, Tuple
 import uuid
 import os
@@ -11,11 +15,39 @@ from scraper_laywright import MuseScoreScraper
 from global_vars import *
 from data_manager import DataBaseManager, DownloadStatus, FileRecord, GarbageCollector
 
+
+# --- Gestione SSE (Server-Sent Events) ---
+class MessageAnnouncer:
+    def __init__(self):
+        self.listeners = []
+
+    def listen(self):
+        q = queue.Queue(maxsize=5)
+        self.listeners.append(q)
+        return q
+
+    def announce(self, message):
+        # Rimuovi i listener disconnessi (dead listeners) e invia il messaggio
+        to_remove = []
+        for i, q in enumerate(self.listeners):
+            try:
+                q.put_nowait(message)
+            except queue.Full:
+                to_remove.append(i)
+        
+        # Pulizia listener pieni/disconnessi
+        for i in reversed(to_remove):
+            del self.listeners[i]
+
+announcer = MessageAnnouncer()
+
+
 class FlaskServer:
-    def __init__(self, host: str, port: int, database: DataBaseManager):
+    def __init__(self, host: str, port: int, database: DataBaseManager, scarper: MuseScoreScraper):
         self.host = host
         self.port = port
         self.db_manager = database
+        self.scraper = scarper
         
         # Configurazione Flask
         self.app = Flask(__name__)
@@ -36,12 +68,22 @@ class FlaskServer:
         self.app.add_url_rule('/download_file/<file_id>', 'download_file', self.download_file)
         self.app.add_url_rule('/records', 'get_database_records', self.get_database_records)
         self.app.add_url_rule('/delete/<file_id>', 'delete_file', self.delete_file, methods=['POST'])
-        
+        self.app.add_url_rule('/stream', 'stream', self.stream) # Nuova rotta SSE
         
     # --- Metodi delle Rotte ---
 
     def index(self) -> Any:
         return render_template('index.html')
+    
+    def stream(self):
+        """Endpoint SSE: invia aggiornamenti in tempo reale ai client."""
+        def event_stream():
+            q = announcer.listen()
+            while True:
+                msg = q.get()
+                yield msg
+        
+        return Response(stream_with_context(event_stream()), mimetype="text/event-stream")
 
     def download(self) -> Any:
         data = request.json
@@ -55,10 +97,17 @@ class FlaskServer:
         if not url:
             return jsonify({"error": "URL è obbligatorio"}), 400
         
+        #verifico se ho più url separati da virgola
+        urls = [url.strip() for url in re.split(r'\s*,\s*', url) if url.strip()]
+        
+        threads = [threading.Thread(target=self._background_task, args=(url, task_id, scale, sharpen_count)) for url in urls]
+        
         # Avvia il thread di background passando 'self' per accedere ai metodi e attributi
-        thread = threading.Thread(target=self._background_task, args=(url, task_id, scale, sharpen_count))
-        thread.daemon = True
-        thread.start()
+        for thread in threads:
+            thread.daemon = True
+            thread.start()
+        
+        self._broadcast_update()
         
         return jsonify({"task_id": task_id})
 
@@ -91,13 +140,38 @@ class FlaskServer:
                     "size": r.size,
                     "created_at": r.created_at,
                     "status": r.status.value,
-                    "source_url": r.source_url
+                    "source_url": r.source_url,
+                    "scale": r.scale,
+                    "filter": r.filter
                 } for r in records
             ]), 200
+            
         except Exception as e:
             logging.error(f"Errore nel recupero record: {e}")
             return jsonify([]), 500
-        
+    
+    
+    def _broadcast_update(self):
+        """Recupera i dati attuali e li invia a tutti i client connessi via SSE."""
+        try:
+            records = self.db_manager.get_all_files()
+            data = [
+                {
+                    "file_name": r.file_name,
+                    "size": r.size,
+                    "created_at": r.created_at,
+                    "status": r.status.value,
+                    "source_url": r.source_url,
+                    "scale": r.scale,
+                    "filter": r.filter
+                } for r in records
+            ]
+            # Formatta come messaggio SSE: "data: JSON\n\n"
+            msg = f"data: {json.dumps(data)}\n\n"
+            announcer.announce(msg)
+        except Exception as e:
+            logging.error(f"Errore durante il broadcast: {e}")
+       
     def get_record(self, file_name: str) -> Tuple[Response, int]:
         """Recupera un record specifico dal database."""
         record = self.db_manager.get_file(file_name)
@@ -128,6 +202,8 @@ class FlaskServer:
             else:
                 logging.warning(f"File {file_name} non trovato nel database durante l'eliminazione.")
                 return jsonify({"error": "File non trovato nel database"}), 404
+            
+            self._broadcast_update()
             
             # 2. Elimina il file fisico
             file_path = os.path.join(self.app.config['UPLOAD_FOLDER'], file_name)
@@ -160,10 +236,9 @@ class FlaskServer:
                 status=DownloadStatus.PROCESSING
             )
             
-            scraper = MuseScoreScraper(headless=False, use_remote=False, automatically_detect_version_and_download = False)
             
             self.db_manager.insert_file(record)
-            result, file = scraper.scrape_musicSheet(url,file_name, scale=int(scale), sharpen_count=sharpen_count)
+            result, file = self.scraper.scrape_musicSheet(url,file_name, scale=int(scale), sharpen_count=sharpen_count)
             
             if not result:
                 raise Exception("Scraping fallito: nessun file generato.")
@@ -177,15 +252,16 @@ class FlaskServer:
             record.status = DownloadStatus.COMPLETED
             self.db_manager.remove_file(file_name)  # Rimuove la vecchia entry se esiste
             self.db_manager.insert_file(record)
-          
-                
+
+              
         except Exception as e:
             logging.error(f"Errore nel task background: {str(e)}", exc_info=True)
             self.db_manager.update_status(file_name, DownloadStatus.ERROR)
             
+        finally:
+            self._broadcast_update()
             
-            #self.download_status[task_id] = {"status": "error", "progress": 0, "message": f"Errore: {str(e)}"}
-
+           
     def run(self):
         """Avvia il server Flask."""
         logging.info(f"Starting server on http://localhost:{self.port}")
