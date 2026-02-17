@@ -4,76 +4,403 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MuseScore Downloader</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f4f5f7;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Header Style simile all'immagine */
+        .main-header {
+            background-color: #3a9cff;
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 4px solid #3a9cff;
+        }
+
+        .main-header h1 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .main-header h1 i {
+            color: #3a9cff;
+            margin-right: 10px;
+        }
+
+        /* Card Style */
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid #e9ecef;
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Form Inputs */
+        .form-control, .form-select {
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            background-color: #fff;
+        }
+
+        .form-control:focus {
+            border-color: #3a9cff;
+            box-shadow: 0 0 0 0.2rem rgba(58, 156, 255, 0.25);
+        }
+
+        /* Pulsante Principale (Scarica Spartito) */
+        .btn-primary-custom {
+            background-color: #3a9cff;
+            border-color: #3a9cff;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #2887e3;
+            border-color: #2887e3;
+        }
+
+        .btn-primary-custom:disabled {
+            background-color: #a0c9ff;
+            border-color: #a0c9ff;
+        }
+
+        /* Tabella */
+        .table th {
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: .3em .6em;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .bg-analyzing { background-color: #17a2b8; color: white; }
+        .bg-downloading { background-color: #ffc107; color: #212529; }
+        .bg-processing { background-color: #6c757d; color: white; }
+        .bg-completed { background-color: #28a745; color: white; }
+        .bg-error { background-color: #dc3545; color: white; }
+
+        /* Icone azioni tabella */
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 1.1rem;
+            line-height: 1;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
-                        <h1 class="text-center mb-0">MuseScore Downloader</h1>
+
+    <!-- Header -->
+    <div class="main-header shadow-sm">
+        <h1><i class="bi bi-music-note-beamed"></i>Music Sheet Downloader</h1>
+    </div>
+
+    <div class="container">
+        <!-- Form Card -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class=""></i>Input</span>
+    
+            </div>
+            <div class="card-body p-4">
+                <form id="downloadForm">
+                    <!-- URL Input -->
+                    <div class="mb-3">
+                        <label for="url" class="form-label">Download url</label>
+                        <input type="url" class="form-control" id="url" name="url" 
+                               placeholder="Inserisci qui il link dello spartito..." required>
                     </div>
-                    <div class="card-body">
-                        <form id="downloadForm">
-                            <div class="mb-3">
-                                <label for="url" class="form-label">URL dello spartito MuseScore</label>
-                                <input type="url" class="form-control" id="url" name="url" required 
-                                       placeholder="https://musescore.com/user/.../scores/...">
-                                <div class="form-text">Inserisci l'URL completo dello spartito che vuoi scaricare.</div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="scale" class="form-label">Scala di ridimensionamento</label>
-                                    <div class="input-group">
-                                        <input type="range" class="form-range" id="scale" name="scale" 
-                                               min="1" max="5" step="0.5" value="2">
-                                        <span class="input-group-text" id="scaleValue">2x</span>
-                                    </div>
-                                    <div class="form-text">Ingrandisce le immagini per migliorare la qualità.</div>
-                                </div>
-                                
-                                <div class="col-md-6 mb-3">
-                                    <label for="sharpen_count" class="form-label">Intensità del filtro Sharpen</label>
-                                    <div class="input-group">
-                                        <input type="range" class="form-range" id="sharpen_count" name="sharpen_count" 
-                                               min="0" max="5" step="1" value="1">
-                                        <span class="input-group-text" id="sharpenValue">1</span>
-                                    </div>
-                                    <div class="form-text">Numero di volte da applicare il filtro di nitidezza.</div>
-                                </div>
-                            </div>
-                            
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary" id="downloadBtn">
-                                    <i class="bi bi-download"></i> Scarica Spartito
-                                </button>
-                            </div>
-                        </form>
-                        
-                        <div id="progressContainer" class="mt-4" style="display: none;">
-                            <h5>Stato del download</h5>
-                            <div class="progress mb-3">
-                                <div class="progress-bar" role="progressbar" style="width: 0%" 
-                                     aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progressBar">0%</div>
-                            </div>
-                            <div id="statusMessage" class="alert alert-info"></div>
-                            <div id="downloadLink" class="text-center" style="display: none;">
-                                <a href="#" class="btn btn-success" id="downloadFileBtn" download>
-                                    <i class="bi bi-file-earmark-pdf"></i> Scarica PDF
-                                </a>
-                            </div>
+
+                    <div class="row mb-3">
+                        <!-- Scale Input -->
+                        <div class="col-md-6">
+                            <label for="scale" class="form-label">Scala di ridimensionamento</label>
+                            <input type="number" class="form-control" id="scale" name="scale" value="2" step="0.1" min="1">
+                            <small class="text-muted">Es: 2x</small>
+                        </div>
+                        <!-- Sharpen Input -->
+                        <div class="col-md-6">
+                            <label for="sharpen_count" class="form-label">Intensità del filtro Sharpen</label>
+                            <input type="number" class="form-control" id="sharpen_count" name="sharpen_count" value="1" min="0">
+                            <small class="text-muted">Es: 1</small>
                         </div>
                     </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary-custom btn-block" id="btnSubmit">
+                            <i class="bi bi-download me-2"></i>Scarica Spartito
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Progress Area -->
+                <div id="progressContainer" class="mt-4" style="display: none;">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span id="progressText" class="text-muted small">Inizializzazione...</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div id="progressBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Table Card -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2"></i>Storico Download</span>
+                <button class="btn btn-sm btn-outline-secondary" onclick="fetchRecords()" title="Aggiorna">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nome File</th>
+                                <th>Dimensione</th>
+                                <th>Stato</th>
+                                <th>Fonte</th>
+                                <th>Data</th>
+                                <th style="width: 100px;">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTable">
+                            <!-- Contenuto dinamico -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const recordsTable = document.getElementById('recordsTable');
+        const downloadForm = document.getElementById('downloadForm');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        // --- Gestione Form ---
+        downloadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('url').value;
+            const scale = document.getElementById('scale').value;
+            const sharpen_count = document.getElementById('sharpen_count').value;
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Avvio...';
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, scale, sharpen_count })
+                });
+                
+                const data = await response.json();
+                
+                if (data.task_id) {
+                    progressContainer.style.display = 'block';
+                    pollStatus(data.task_id);
+                } else {
+                    alert("Errore: " + (data.error || "Impossibile avviare il task"));
+                    resetFormUI();
+                }
+            } catch (err) {
+                alert("Errore di connessione al server.");
+                resetFormUI();
+            }
+        });
+
+        function resetFormUI() {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<i class="bi bi-download me-2"></i>Scarica Spartito';
+        }
+
+        function pollStatus(taskId) {
+            const interval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/status/${taskId}`);
+                    const data = await res.json();
+
+                    // Gestione stati not_found o completati
+                    if (data.status === 'not_found') {
+                        clearInterval(interval);
+                        fetchRecords();
+                        resetFormUI();
+                        progressContainer.style.display = 'none';
+                        return;
+                    }
+
+                    // Aggiornamento UI Progress
+                    let statusText = mapStatus(data.status).text;
+                    progressText.innerText = `Stato: ${statusText}`;
+                    
+                    // Indeterminato durante l'elaborazione
+                    progressBar.style.width = '100%';
+                    progressBar.classList.add('progress-bar-striped', 'progress-bar-animated');
+
+                    if (data.status === 'completed' || data.status === 'error') {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                            resetFormUI();
+                            fetchRecords();
+                        }, 1000);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    clearInterval(interval);
+                }
+            }, 2000);
+        }
+
+        // --- Gestione Tabella Records ---
+
+        function formatSize(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function mapStatus(status) {
+            const map = {
+                'ANALYZING': { class: 'bg-analyzing', text: 'Analisi' },
+                'DOWNLOADING_PAGES': { class: 'bg-downloading', text: 'Download' },
+                'PROCESSING': { class: 'bg-processing', text: 'Elaborazione' },
+                'COMPLETED': { class: 'bg-completed', text: 'Completato' },
+                'ERROR': { class: 'bg-error', text: 'Errore' }
+            };
+            return map[status] || { class: 'bg-secondary', text: status };
+        }
+
+        async function fetchRecords() {
+            try {
+                const response = await fetch('/records');
+                const records = await response.json();
+                
+                recordsTable.innerHTML = '';
+
+                if (records.length === 0) {
+                    recordsTable.innerHTML = '<tr><td colspan="6" class="text-center text-muted p-4">Nessun download presente.</td></tr>';
+                    return;
+                }
+
+                records.forEach(record => {
+                    const fileId = record.file_name.replace('spartito_', '').replace('.pdf', '');
+                    const isCompleted = record.status === 'COMPLETED';
+                    const statusInfo = mapStatus(record.status);
+                    
+                    const row = document.createElement('tr');
+                    
+                    // Cella Azioni
+                    let actionsHtml = `
+                        <div class="btn-group" role="group">
+                            <!-- Pulsante Download (Icona) -->
+                            <button class="btn btn-outline-success action-btn" 
+                                    onclick="downloadFile('${fileId}')" 
+                                    title="Scarica PDF"
+                                    ${!isCompleted ? 'disabled' : ''}>
+                                <i class="bi bi-download"></i>
+                            </button>
+                            <!-- Pulsante Elimina (Icona) -->
+                            <button class="btn btn-outline-danger action-btn" 
+                                    onclick="deleteFile('${fileId}', this)" 
+                                    title="Elimina">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `;
+
+                    row.innerHTML = `
+                        <td><code class="small">${record.file_name}</code></td>
+                        <td>${formatSize(record.size)}</td>
+                        <td><span class="status-badge ${statusInfo.class}">${statusInfo.text}</span></td>
+                        <td>
+                            <a href="${record.source_url}" target="_blank" class="text-truncate d-inline-block" style="max-width: 150px;" title="${record.source_url}">
+                                ${record.source_url}
+                            </a>
+                        </td>
+                        <td>${new Date(record.created_at).toLocaleString('it-IT', {dateStyle: 'short', timeStyle: 'short'})}</td>
+                        <td>${actionsHtml}</td>
+                    `;
+                    recordsTable.appendChild(row);
+                });
+            } catch (err) {
+                console.error("Errore caricamento records:", err);
+                recordsTable.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Errore caricamento dati.</td></tr>';
+            }
+        }
+
+        function downloadFile(fileId) {
+            window.location.href = `/download_file/${fileId}`;
+        }
+
+        async function deleteFile(fileId, btnElement) {
+            if (!confirm("Sei sicuro di voler eliminare questo file?")) return;
+
+            const originalHtml = btnElement.innerHTML;
+            btnElement.disabled = true;
+            btnElement.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+                const response = await fetch(`/delete/${fileId}`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    fetchRecords(); 
+                } else {
+                    alert("Errore eliminazione: " + data.error);
+                    btnElement.disabled = false;
+                    btnElement.innerHTML = originalHtml;
+                }
+            } catch (err) {
+                alert("Errore di rete.");
+                btnElement.disabled = false;
+                btnElement.innerHTML = originalHtml;
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', fetchRecords);
+    </script>
 </body>
 </html>
