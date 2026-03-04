@@ -7,9 +7,6 @@ import time
 import shutil
 from datetime import datetime, timedelta
 
-# Assicurati che il modulo data_manager sia importabile
-# Potrebbe essere necessario aggiungere il percorso al PYTHONPATH
-# o eseguire il test con python -m unittest
 from data_manager import DataManager, GarbageCollector, FileStatus
 
 class TestDataManager(unittest.TestCase):
