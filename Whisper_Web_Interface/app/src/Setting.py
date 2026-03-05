@@ -6,11 +6,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Directory per le trascrizioni
-TRANSCRIPTIONS_DIR: Final[str] = os.path.join(os.path.dirname(os.path.abspath(__file__)),"transcriptions")
+# # Directory per le trascrizioni
+# TRANSCRIPTIONS_DIR: Final[str] = os.path.join(os.path.dirname(os.path.abspath(__file__)),"transcriptions")
 
-if not os.path.exists(TRANSCRIPTIONS_DIR):
-    os.makedirs(TRANSCRIPTIONS_DIR)
+# if not os.path.exists(TRANSCRIPTIONS_DIR):
+#     os.makedirs(TRANSCRIPTIONS_DIR)
 
 
 ALLOWED_EXTENSIONS: set = {'mp3', 'wav', 'm4a', 'ogg', 'flac'}

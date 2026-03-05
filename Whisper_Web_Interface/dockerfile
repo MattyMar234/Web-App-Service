@@ -11,6 +11,7 @@ RUN apt-get install -y openssh-server
 RUN apt-get install -y ffmpeg
 RUN apt-get install -y wget
 RUN apt-get install -y curl
+RUN apt-get install -y libsndfile1
 #RUN apt-get install -y git
 RUN rm -rf /var/lib/apt/lists/*
 

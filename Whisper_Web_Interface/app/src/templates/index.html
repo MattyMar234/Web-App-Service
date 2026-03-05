@@ -472,481 +472,469 @@
     <div class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
-    <script>
-        // Variabili globali per stato ordinamento e paginazione
-        let socket;
-        let currentPage = 1;
-        let currentSortBy = 'created_at';
-        let currentSortOrder = 'desc';
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<script>
+    // Variabili globali
+    let socket;
+    let currentPage = 1;
+    let currentSortBy = 'created_at';
+    let currentSortOrder = 'desc';
+    
+    // Variabile per accumulare i file selezionati
+    let selectedFiles = [];
 
-        // Funzioni globali per i pulsanti HTML (onclick)
-        function sortTable(sortBy, sortOrder) {
-            currentSortBy = sortBy;
-            currentSortOrder = sortOrder;
-            currentPage = 1; // Reset alla prima pagina
-            if (socket) loadTranscriptions();
+    // Funzioni globali per paginazione
+    function sortTable(sortBy, sortOrder) {
+        currentSortBy = sortBy;
+        currentSortOrder = sortOrder;
+        currentPage = 1;
+        if (socket) loadTranscriptions();
+    }
+
+    function nextPage() {
+        const controls = document.getElementById('pagination-controls');
+        if (!controls) return;
+        let totalPages = parseInt(controls.dataset.totalPages || 1);
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadTranscriptions();
         }
+    }
 
-        function nextPage() {
-            const controls = document.getElementById('pagination-controls');
-            if (!controls) return;
-            let totalPages = parseInt(controls.dataset.totalPages || 1);
-            if (currentPage < totalPages) {
-                currentPage++;
-                loadTranscriptions();
-            }
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadTranscriptions();
         }
+    }
 
-        function prevPage() {
-            if (currentPage > 1) {
-                currentPage--;
-                loadTranscriptions();
-            }
-        }
+    function loadTranscriptions() {
+        if(!socket) return;
+        socket.emit('get_transcriptions', {
+            page: currentPage,
+            sort_by: currentSortBy,
+            sort_order: currentSortOrder
+        });
+    }
 
-        // Funzione per richiedere dati al server
-        function loadTranscriptions() {
-            if(!socket) return;
-            socket.emit('get_transcriptions', {
-                page: currentPage,
-                sort_by: currentSortBy,
-                sort_order: currentSortOrder
-            });
-        }
+    // Funzione per rimuovere un file dalla lista locale
+    window.removeFileFromSelection = function(index) {
+        selectedFiles.splice(index, 1);
+        updateFileListUI();
+    }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inizializzazione SocketIO
-            socket = io();
+    // Funzione per aggiornare la visualizzazione della lista file CON BARRA PROGRESSO
+    function updateFileListUI() {
+        const fileList = document.getElementById('fileList');
+        fileList.innerHTML = '';
 
-            // Imposta lo stato della GPU all'avvio
-            const gpuStatus = document.getElementById('gpuStatus');
-            {% if gpu_available %}
-            gpuStatus.textContent = 'GPU: Disponibile';
-            gpuStatus.className = 'gpu-status gpu-available';
-            {% else %}
-            gpuStatus.textContent = 'GPU: Non disponibile';
-            gpuStatus.className = 'gpu-status gpu-unavailable';
-            {% endif %}
+        if (selectedFiles.length === 0) return;
 
-            // Gestione selezione file
-            const fileInput = document.getElementById('audioFiles');
-            const fileList = document.getElementById('fileList');
+        const list = document.createElement('ul');
+        list.className = 'list-group';
+
+        selectedFiles.forEach((file, index) => {
+            const item = document.createElement('li');
+            // ID univoco per aggiornare questa specifica riga durante l'upload
+            item.id = `file-item-${index}`;
+            item.className = 'list-group-item';
             
-            fileInput.addEventListener('change', function() {
-                fileList.innerHTML = '';
-                if (this.files.length > 0) {
-                    const list = document.createElement('ul');
-                    list.className = 'list-group';
-                    
-                    Array.from(this.files).forEach(file => {
-                        const item = document.createElement('li');
-                        item.className = 'list-group-item d-flex justify-content-between align-items-center';
-                        item.innerHTML = `
-                            <div>
-                                <i class="bi bi-file-earmark-music"></i> ${file.name}
-                                <span class="text-muted ms-2">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                            </div>
-                        `;
-                        list.appendChild(item);
-                    });
-                    
-                    fileList.appendChild(list);
-                }
-            });
-
-            // Gestione invio form
-            const uploadForm = document.getElementById('uploadForm');
-            
-            uploadForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                if (fileInput.files.length === 0) {
-                    showNotification('Seleziona almeno un file audio', 'warning');
-                    return;
-                }
-                
-                const formData = new FormData(uploadForm);
-                
-                fetch('/transcribe', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        fileList.innerHTML = '';
-                        fileInput.value = '';
-                        showNotification('File aggiunti alla coda con successo!', 'success');
-                    } else {
-                        showNotification('Errore: ' + data.error, 'danger');
-                    }
-                })
-                .catch(error => {
-                    showNotification('Errore di rete: ' + error.message, 'danger');
-                });
-            });
-
-            // --- LISTENER SOCKETIO ---
-
-            // Aggiornamento Coda
-            socket.on('queue_status', function(data) {
-                updateQueueStatus(data);
-            });
-            
-            // Aggiornamento Trascrizioni (con supporto paginazione)
-            socket.on('transcriptions_update', function(data) {
-                // Il backend ora invia un oggetto { items: [], pagination: {} }
-                // Fallback a data.transcriptions per compatibilità se necessario
-                const items = data.items || data.transcriptions || [];
-                const pagination = data.pagination;
-
-                updateTranscriptionsTable(items);
-
-                // Aggiorna UI Paginazione se i dati esistono
-                if (pagination) {
-                    const pageInfo = document.getElementById('page-info');
-                    const controls = document.getElementById('pagination-controls');
-                    
-                    if (pageInfo) {
-                        pageInfo.innerText = `Pagina ${pagination.current_page} di ${pagination.total_pages} (Totale: ${pagination.total_items})`;
-                    }
-                    
-                    if (controls) {
-                        controls.dataset.totalPages = pagination.total_pages;
-                    }
-                    
-                    currentPage = pagination.current_page;
-                }
-            });
-
-            // Richiedi stato iniziale
-            socket.emit('get_queue_status');
-            loadTranscriptions(); // Usa la funzione wrapper per la prima richiesta
-
-            // --- FUNZIONI DI AGGIORNAMENTO UI ---
-
-            function updateQueueStatus(data) {
-                const serverStatus = document.getElementById('serverStatus');
-                serverStatus.textContent = data.transcriber_status === 'idle' ? 'In attesa' : 
-                                          data.transcriber_status === 'processing' ? 'Elaborazione in corso' : 
-                                          data.transcriber_status === 'error' ? 'Errore' : 'Sconosciuto';
-                
-                document.getElementById('queueCount').textContent = data.queue.length;
-                
-                const currentDevice = document.getElementById('currentDevice');
-                currentDevice.textContent = data.current_device ? data.current_device.toUpperCase() : '-';
-                
-                const currentFile = document.getElementById('currentFile');
-                currentFile.textContent = data.current_file || '-';
-                
-                const queueTableBody = document.getElementById('queueTableBody');
-                
-                if (data.queue.length === 0) {
-                    queueTableBody.innerHTML = `
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-3">Nessun file in coda</td>
-                        </tr>
-                    `;
-                } else {
-                    queueTableBody.innerHTML = '';
-                    
-                    data.queue.forEach(item => {
-                        const row = document.createElement('tr');
-                        row.className = 'queue-item';
-                        row.setAttribute('data-id', item.id);
-                        
-                        let statusBadge = '';
-                        if (item.status === 'pending') {
-                            statusBadge = '<span class="badge bg-warning">In attesa</span>';
-                        } else if (item.status === 'processing') {
-                            statusBadge = '<span class="badge bg-primary">In elaborazione</span>';
-                        } else if (item.status === 'completed') {
-                            statusBadge = '<span class="badge bg-success">Completato</span>';
-                        } else if (item.status === 'error') {
-                            statusBadge = '<span class="badge bg-danger">Errore</span>';
-                        }
-                        
-                        let actionButtons = '';
-                        if (item.status === 'pending') {
-                            actionButtons = `
-                                <button class="btn btn-outline-danger btn-sm remove-queue-btn" title="Rimuovi dalla coda">
-                                    <i class="bi bi-x-circle"></i>
-                                </button>
-                            `;
-                        } else if (item.status === 'processing') {
-                            actionButtons = `
-                                <button class="btn btn-outline-danger btn-sm stop-queue-btn" title="Ferma e Rimuovi">
-                                    <i class="bi bi-stop-circle"></i>
-                                </button>
-                            `;
-                        }
-                        
-                        row.innerHTML = `
-                            <td>${item.filename}</td>
-                            <td>${item.language === 'auto' ? 'Automatica' : item.language}</td>
-                            <td>${item.model}</td>
-                            <td class="status-badge">${statusBadge}</td>
-                            <td>
-                                <div class="progress-container">
-                                    <div class="progress" style="height: 5px;">
-                                        <div class="progress-bar" role="progressbar" style="width: ${item.progress}%;"></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>${item.created_at}</td>
-                            <td>${actionButtons}</td>
-                        `;
-                        
-                        queueTableBody.appendChild(row);
-                    });
-                    
-                    addQueueRemoveEventListeners();
-                    addQueueStopEventListeners();
-                }
-            }
-
-            function updateTranscriptionsTable(transcriptions) {
-                const transcriptionsTableBody = document.getElementById('transcriptionsTableBody');
-                
-                if (!transcriptionsTableBody) return;
-
-                if (transcriptions.length === 0) {
-                    transcriptionsTableBody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-3">Nessuna trascrizione disponibile</td>
-                        </tr>
-                    `;
-                } else {
-                    transcriptionsTableBody.innerHTML = '';
-                    
-                    transcriptions.forEach(trans => {
-                        const row = document.createElement('tr');
-                        row.setAttribute('data-id', trans.id);
-                        
-                        row.innerHTML = `
-                            <td>${trans.display_name}</td>
-                            <td>${trans.language}</td>
-                            <td>${trans.model}</td>
-                            <td>${trans.temperature || '?'}</td>
-                            <td>${trans.created_at}</td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-primary view-btn" title="Visualizza">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button class="btn btn-outline-secondary rename-btn" title="Rinomina">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-outline-success download-btn" title="Scarica">
-                                        <i class="bi bi-download"></i>
-                                    </button>
-                                    <button class="btn btn-outline-danger delete-btn" title="Elimina">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        `;
-                        
-                        transcriptionsTableBody.appendChild(row);
-                    });
-                    
-                    addTableEventListeners();
-                }
-            }
-            
-            function addQueueRemoveEventListeners() {
-                document.querySelectorAll('.remove-queue-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const row = this.closest('tr');
-                        const itemId = row.getAttribute('data-id');
-                        
-                        if (confirm('Sei sicuro di voler rimuovere questo file dalla coda?')) {
-                            fetch(`/queue/${itemId}`, {
-                                method: 'DELETE'
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    showNotification('Elemento rimosso dalla coda con successo', 'success');
-                                } else {
-                                    showNotification('Errore durante la rimozione: ' + data.error, 'danger');
-                                }
-                            })
-                            .catch(error => {
-                                showNotification('Errore di rete: ' + error.message, 'danger');
-                            });
-                        }
-                    });
-                });
-            }
-
-            function addQueueStopEventListeners() {
-                document.querySelectorAll('.stop-queue-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const row = this.closest('tr');
-                        const itemId = row.getAttribute('data-id');
-                        
-                        if (confirm('Sei sicuro di voler fermare e rimuovere questa trascrizione?')) {
-                            fetch(`/queue/${itemId}/stop`, {
-                                method: 'DELETE'
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    showNotification('Trascrizione fermata e rimossa con successo', 'success');
-                                } else {
-                                    showNotification('Errore: ' + data.error, 'danger');
-                                }
-                            })
-                            .catch(error => {
-                                showNotification('Errore di rete: ' + error.message, 'danger');
-                            });
-                        }
-                    });
-                });
-            }
-            
-            function addTableEventListeners() {
-                document.querySelectorAll('.view-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const row = this.closest('tr');
-                        const transId = row.getAttribute('data-id');
-                        
-                        fetch(`/transcription/${transId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.error) {
-                                showNotification(data.error, 'danger');
-                            } else {
-                                document.getElementById('viewFilename').textContent = data.display_name;
-                                document.getElementById('viewText').value = data.text;
-                                document.getElementById('downloadFromView').setAttribute('data-id', transId);
-                                
-                                const modal = new bootstrap.Modal(document.getElementById('viewModal'));
-                                modal.show();
-                            }
-                        })
-                        .catch(error => {
-                            showNotification('Errore: ' + error.message, 'danger');
-                        });
-                    });
-                });
-
-                document.querySelectorAll('.download-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const row = this.closest('tr');
-                        const transId = row.getAttribute('data-id');
-                        window.open(`/transcription/${transId}/download`, '_blank');
-                    });
-                });
-
-                document.querySelectorAll('.rename-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const row = this.closest('tr');
-                        const transId = row.getAttribute('data-id');
-                        const currentName = row.cells[0].textContent;
-                        
-                        document.getElementById('newName').value = currentName;
-                        document.getElementById('confirmRename').setAttribute('data-id', transId);
-                        
-                        const modal = new bootstrap.Modal(document.getElementById('renameModal'));
-                        modal.show();
-                    });
-                });
-
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const row = this.closest('tr');
-                        const transId = row.getAttribute('data-id');
-                        
-                        if (confirm('Sei sicuro di voler eliminare questa trascrizione?')) {
-                            fetch(`/transcription/${transId}`, {
-                                method: 'DELETE'
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    showNotification('Trascrizione eliminata con successo', 'success');
-                                    // Ricarica la pagina corrente dopo eliminazione
-                                    loadTranscriptions();
-                                } else {
-                                    showNotification('Errore durante l\'eliminazione: ' + data.error, 'danger');
-                                }
-                            })
-                            .catch(error => {
-                                showNotification('Errore di rete: ' + error.message, 'danger');
-                            });
-                        }
-                    });
-                });
-            }
-
-            // Conferma rinomina
-            document.getElementById('confirmRename').addEventListener('click', function() {
-                const transId = this.getAttribute('data-id');
-                const newName = document.getElementById('newName').value.trim();
-                
-                if (!newName) {
-                    showNotification('Inserisci un nome valido', 'warning');
-                    return;
-                }
-                
-                fetch(`/transcription/${transId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ display_name: newName })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('renameModal'));
-                        modal.hide();
-                        
-                        showNotification('Trascrizione rinominata con successo', 'success');
-                        loadTranscriptions(); // Aggiorna lista
-                    } else {
-                        showNotification('Errore durante la rinomina: ' + data.error, 'danger');
-                    }
-                })
-                .catch(error => {
-                    showNotification('Errore di rete: ' + error.message, 'danger');
-                });
-            });
-
-            // Download dalla modale di visualizzazione
-            document.getElementById('downloadFromView').addEventListener('click', function() {
-                const transId = this.getAttribute('data-id');
-                window.open(`/transcription/${transId}/download`, '_blank');
-            });
-
-            // Funzione per mostrare notifiche
-            function showNotification(message, type) {
-                const toast = document.createElement('div');
-                toast.className = `toast align-items-center text-white bg-${type} border-0`;
-                toast.setAttribute('role', 'alert');
-                toast.innerHTML = `
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            ${message}
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            item.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="text-truncate" style="max-width: 70%;">
+                        <i class="bi bi-file-earmark-music text-primary"></i> 
+                        <span class="filename">${file.name}</span>
+                        <span class="text-muted ms-2 small">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                     </div>
-                `;
+                    <div class="file-actions">
+                        <span class="status-text small text-muted me-2"></span>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-btn" onclick="removeFileFromSelection(${index})" title="Rimuovi">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+        fileList.appendChild(list);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        socket = io();
+
+        const gpuStatus = document.getElementById('gpuStatus');
+        {% if gpu_available %}
+        gpuStatus.textContent = 'GPU: Disponibile';
+        gpuStatus.className = 'gpu-status gpu-available';
+        {% else %}
+        gpuStatus.textContent = 'GPU: Non disponibile';
+        gpuStatus.className = 'gpu-status gpu-unavailable';
+        {% endif %}
+
+        // --- GESTIONE FILE INPUT ---
+        const fileInput = document.getElementById('audioFiles');
+        
+        fileInput.addEventListener('change', function() {
+            for (let i = 0; i < this.files.length; i++) {
+                const exists = selectedFiles.some(f => f.name === this.files[i].name && f.size === this.files[i].size);
+                if (!exists) {
+                    selectedFiles.push(this.files[i]);
+                }
+            }
+            this.value = ''; // Reset input
+            updateFileListUI();
+        });
+
+        // --- GESTIONE INVIO FORM (UPLOAD SEQUENZIALE) ---
+        const uploadForm = document.getElementById('uploadForm');
+        const submitBtn = uploadForm.querySelector('button[type="submit"]');
+        const originalBtnContent = submitBtn.innerHTML;
+
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (selectedFiles.length === 0) {
+                showNotification('Seleziona almeno un file audio', 'warning');
+                return;
+            }
+
+            // Disabilita controlli
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Upload in corso...`;
+            
+            // Disabilita tutti i pulsanti "Rimuovi" nella lista
+            document.querySelectorAll('.remove-btn').forEach(btn => btn.disabled = true);
+
+            // Cattura i parametri del form una volta sola
+            const formBaseData = new FormData(uploadForm);
+            const baseParams = {};
+            formBaseData.forEach((value, key) => {
+                if (key !== 'files') baseParams[key] = value;
+            });
+
+            // Processa i file uno alla volta (sequenziale)
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                const itemElement = document.getElementById(`file-item-${i}`);
                 
-                const container = document.querySelector('.toast-container');
-                container.appendChild(toast);
+                if(itemElement) {
+                    // Aggiorna UI: stato "Caricamento"
+                    const statusText = itemElement.querySelector('.status-text');
+                    const progressBar = itemElement.querySelector('.progress-bar');
+                    statusText.textContent = 'Caricamento...';
+                    statusText.className = 'status-text small text-primary';
+                }
+
+                // Crea FormData per questo singolo file
+                const fd = new FormData();
+                for (let key in baseParams) fd.append(key, baseParams[key]);
+                fd.append('files', file); // Backend si aspetta una lista 'files'
+
+                // Invia e attendi completamento (await)
+                const success = await uploadSingleFile(fd, itemElement);
                 
-                const bsToast = new bootstrap.Toast(toast);
-                bsToast.show();
+                if (success) successCount++;
+                else errorCount++;
+            }
+
+            // Report finale
+            if (successCount > 0) {
+                showNotification(`${successCount} file aggiunti alla coda!`, 'success');
+            }
+            if (errorCount > 0) {
+                showNotification(`${errorCount} file non sono stati caricati.`, 'danger');
+            }
+
+            // Pulizia e reset
+            selectedFiles = [];
+            updateFileListUI();
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnContent;
+        });
+
+        // Funzione helper per caricare un singolo file con Promise
+        function uploadSingleFile(formData, itemElement) {
+            return new Promise((resolve) => {
+                const xhr = new XMLHttpRequest();
                 
-                toast.addEventListener('hidden.bs.toast', () => {
-                    toast.remove();
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable && itemElement) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        const progressBar = itemElement.querySelector('.progress-bar');
+                        const statusText = itemElement.querySelector('.status-text');
+                        
+                        progressBar.style.width = percent + '%';
+                        progressBar.setAttribute('aria-valuenow', percent);
+                        statusText.textContent = `${percent}%`;
+                    }
                 });
+
+                xhr.addEventListener('load', function() {
+                    if (itemElement) {
+                        const progressBar = itemElement.querySelector('.progress-bar');
+                        const statusText = itemElement.querySelector('.status-text');
+                        
+                        if (xhr.status === 200) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                if (data.success) {
+                                    // Successo
+                                    progressBar.style.width = '100%';
+                                    progressBar.className = 'progress-bar bg-success';
+                                    statusText.textContent = 'Completato';
+                                    statusText.className = 'status-text small text-success';
+                                    resolve(true);
+                                } else {
+                                    // Errore logico server
+                                    throw new Error(data.error || 'Errore generico');
+                                }
+                            } catch (err) {
+                                // Errore parsing JSON o errore logico
+                                progressBar.className = 'progress-bar bg-danger';
+                                statusText.textContent = 'Errore';
+                                statusText.className = 'status-text small text-danger';
+                                showNotification(`Errore: ${err.message}`, 'danger');
+                                resolve(false);
+                            }
+                        } else {
+                            // Errore HTTP
+                            progressBar.className = 'progress-bar bg-danger';
+                            statusText.textContent = 'Errore Server';
+                            statusText.className = 'status-text small text-danger';
+                            resolve(false);
+                        }
+                    } else {
+                        resolve(false);
+                    }
+                });
+
+                xhr.addEventListener('error', function() {
+                    if (itemElement) {
+                        itemElement.querySelector('.progress-bar').className = 'progress-bar bg-danger';
+                        itemElement.querySelector('.status-text').textContent = 'Errore Rete';
+                    }
+                    resolve(false);
+                });
+
+                xhr.open('POST', '/transcribe', true);
+                xhr.send(formData);
+            });
+        }
+
+        // --- SOCKET LISTENERS ---
+        socket.on('queue_status', function(data) { updateQueueStatus(data); });
+        socket.on('transcriptions_update', function(data) {
+            const items = data.items || data.transcriptions || [];
+            const pagination = data.pagination;
+            updateTranscriptionsTable(items);
+
+            if (pagination) {
+                document.getElementById('page-info').innerText = 
+                    `Pagina ${pagination.current_page} di ${pagination.total_pages} (Totale: ${pagination.total_items})`;
+                const controls = document.getElementById('pagination-controls');
+                if (controls) controls.dataset.totalPages = pagination.total_pages;
+                currentPage = pagination.current_page;
             }
         });
-    </script>
+
+        socket.emit('get_queue_status');
+        loadTranscriptions();
+
+        // --- FUNZIONI UI AGGIORNAMENTO ---
+        
+        function updateQueueStatus(data) {
+            const serverStatus = document.getElementById('serverStatus');
+            serverStatus.textContent = data.transcriber_status === 'idle' ? 'In attesa' : 
+                                      data.transcriber_status === 'processing' ? 'Elaborazione' : 
+                                      data.transcriber_status === 'error' ? 'Errore' : 'Sconosciuto';
+            
+            document.getElementById('queueCount').textContent = data.queue.length;
+            document.getElementById('currentDevice').textContent = data.current_device ? data.current_device.toUpperCase() : '-';
+            document.getElementById('currentFile').textContent = data.current_file || '-';
+            
+            const queueTableBody = document.getElementById('queueTableBody');
+            
+            if (data.queue.length === 0) {
+                queueTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-3">Nessun file in coda</td></tr>`;
+            } else {
+                queueTableBody.innerHTML = '';
+                data.queue.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'queue-item';
+                    row.setAttribute('data-id', item.id);
+                    
+                    let statusBadge = item.status === 'pending' ? '<span class="badge bg-warning">In attesa</span>' :
+                                      item.status === 'processing' ? '<span class="badge bg-primary">In elaborazione</span>' :
+                                      item.status === 'completed' ? '<span class="badge bg-success">Completato</span>' :
+                                      '<span class="badge bg-danger">Errore</span>';
+                    
+                    let actionButtons = '';
+                    if (item.status === 'pending') {
+                        actionButtons = `<button class="btn btn-outline-danger btn-sm remove-queue-btn"><i class="bi bi-x-circle"></i></button>`;
+                    } else if (item.status === 'processing') {
+                        actionButtons = `<button class="btn btn-outline-danger btn-sm stop-queue-btn"><i class="bi bi-stop-circle"></i></button>`;
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${item.filename}</td>
+                        <td>${item.language === 'auto' ? 'Automatica' : item.language}</td>
+                        <td>${item.model}</td>
+                        <td>${statusBadge}</td>
+                        <td><div class="progress" style="height: 5px;"><div class="progress-bar" style="width: ${item.progress}%;"></div></div></td>
+                        <td>${item.created_at}</td>
+                        <td>${actionButtons}</td>
+                    `;
+                    queueTableBody.appendChild(row);
+                });
+                addQueueRemoveEventListeners();
+                addQueueStopEventListeners();
+            }
+        }
+
+        function updateTranscriptionsTable(transcriptions) {
+            const transcriptionsTableBody = document.getElementById('transcriptionsTableBody');
+            if (!transcriptionsTableBody) return;
+
+            if (transcriptions.length === 0) {
+                transcriptionsTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Nessuna trascrizione disponibile</td></tr>`;
+                return;
+            }
+            
+            transcriptionsTableBody.innerHTML = '';
+            transcriptions.forEach(trans => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-id', trans.id);
+                row.innerHTML = `
+                    <td>${trans.display_name}</td>
+                    <td>${trans.language}</td>
+                    <td>${trans.model}</td>
+                    <td>${trans.temperature || '0.0'}</td>
+                    <td>${trans.created_at}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary view-btn" title="Visualizza"><i class="bi bi-eye"></i></button>
+                            <button class="btn btn-outline-secondary rename-btn" title="Rinomina"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-outline-success download-btn" title="Scarica"><i class="bi bi-download"></i></button>
+                            <button class="btn btn-outline-danger delete-btn" title="Elimina"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                transcriptionsTableBody.appendChild(row);
+            });
+            addTableEventListeners();
+        }
+
+        function addQueueRemoveEventListeners() {
+            document.querySelectorAll('.remove-queue-btn').forEach(btn => {
+                btn.onclick = function() {
+                    const row = this.closest('tr');
+                    const itemId = row.getAttribute('data-id');
+                    if (confirm('Rimuovere questo file dalla coda?')) {
+                        fetch(`/queue/${itemId}`, { method: 'DELETE' })
+                        .then(r => r.json())
+                        .then(d => d.success ? showNotification('Rimosso', 'success') : showNotification(d.error, 'danger'));
+                    }
+                };
+            });
+        }
+
+        function addQueueStopEventListeners() {
+            document.querySelectorAll('.stop-queue-btn').forEach(btn => {
+                btn.onclick = function() {
+                    const row = this.closest('tr');
+                    const itemId = row.getAttribute('data-id');
+                    if (confirm('Fermare e rimuovere questa elaborazione?')) {
+                        fetch(`/queue/${itemId}/stop`, { method: 'DELETE' })
+                        .then(r => r.json())
+                        .then(d => d.success ? showNotification('Fermato', 'success') : showNotification(d.error, 'danger'));
+                    }
+                };
+            });
+        }
+        
+        function addTableEventListeners() {
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.onclick = function() {
+                    const transId = this.closest('tr').getAttribute('data-id');
+                    fetch(`/transcription/${transId}`).then(r => r.json()).then(data => {
+                        if (data.error) return showNotification(data.error, 'danger');
+                        document.getElementById('viewFilename').textContent = data.display_name;
+                        document.getElementById('viewText').value = data.text;
+                        document.getElementById('downloadFromView').setAttribute('data-id', transId);
+                        new bootstrap.Modal(document.getElementById('viewModal')).show();
+                    });
+                };
+            });
+            document.querySelectorAll('.download-btn').forEach(btn => {
+                btn.onclick = function() {
+                    const transId = this.closest('tr').getAttribute('data-id');
+                    window.open(`/transcription/${transId}/download`, '_blank');
+                };
+            });
+            document.querySelectorAll('.rename-btn').forEach(btn => {
+                btn.onclick = function() {
+                    const row = this.closest('tr');
+                    const transId = row.getAttribute('data-id');
+                    document.getElementById('newName').value = row.cells[0].textContent;
+                    document.getElementById('confirmRename').setAttribute('data-id', transId);
+                    new bootstrap.Modal(document.getElementById('renameModal')).show();
+                };
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.onclick = function() {
+                    const transId = this.closest('tr').getAttribute('data-id');
+                    if (confirm('Eliminare questa trascrizione?')) {
+                        fetch(`/transcription/${transId}`, { method: 'DELETE' })
+                        .then(r => r.json())
+                        .then(d => {
+                            if(d.success) {
+                                showNotification('Eliminata', 'success');
+                                loadTranscriptions();
+                            } else {
+                                showNotification(d.error, 'danger');
+                            }
+                        });
+                    }
+                };
+            });
+        }
+
+        document.getElementById('confirmRename').onclick = function() {
+            const transId = this.getAttribute('data-id');
+            const newName = document.getElementById('newName').value.trim();
+            if (!newName) return;
+            fetch(`/transcription/${transId}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({display_name: newName})
+            }).then(r => r.json()).then(d => {
+                if(d.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('renameModal')).hide();
+                    showNotification('Rinominata', 'success');
+                    loadTranscriptions();
+                }
+            });
+        };
+
+        document.getElementById('downloadFromView').onclick = function() {
+            window.open(`/transcription/${this.getAttribute('data-id')}/download`, '_blank');
+        };
+
+        function showNotification(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+            document.querySelector('.toast-container').appendChild(toast);
+            new bootstrap.Toast(toast).show();
+            toast.onhidden = () => toast.remove();
+        }
+    });
+</script>
 </body>
 </html>

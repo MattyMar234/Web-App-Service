@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 from concurrent.futures import ThreadPoolExecutor
 import logging
 
-from database import DatabaseManager
+from data.database import DatabaseManager
 from Setting import *
 from server import WebServer
 
@@ -25,9 +25,9 @@ logger.info(f"torch backends cudnn version: {torch.backends.cudnn.version()}")
 
 def main():
     
-    wb = WebServer(database = DatabaseManager('transcriptions.db'))
+    database = DatabaseManager('transcriptions.db')
+    wb = WebServer(database = database)
 
 
 if __name__ == "__main__":
-    #from updateChecker import auto_update
     main()

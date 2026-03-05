@@ -3,25 +3,21 @@ import sys
 import tempfile
 import threading
 import time
-from typing import Callable, List
+from typing import Callable, List, Optional
 import uuid
-import json
-from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_file, redirect, url_for
 from flask_socketio import SocketIO, emit
 import torch
 from werkzeug.utils import secure_filename
 from concurrent.futures import ThreadPoolExecutor
 import logging
-
-from Transcriber import Transcription
 from Transcriber import QueueItem, Transcriber
 from Setting import *
-from database import DatabaseManager
+from data.database import Transcription, DatabaseManager
 
 class WebServer:
-    def __init__(self, host='0.0.0.0', port=12345, database: DatabaseManager = None):
-        
+    def __init__(self, host:str ='0.0.0.0', port: int=12345, database: Optional[DatabaseManager] = None):
+        assert database is not None
         
         self._db = database
         self._modelName = 'small'
@@ -38,13 +34,7 @@ class WebServer:
         
         self._Transcriber = Transcriber()
         
-        # # Memoria delle trascrizioni
-        # self._transcriptions = {t.id: t for t in Transcription.load_transcriptions(TRANSCRIPTIONS_DIR)}
-        
-        # for filename in os.listdir(tempfile.gettempdir()):
-        #     if os.path.isfile(os.path.join(tempfile.gettempdir(), filename)) and filename.endswith(tuple(ALLOWED_EXTENSIONS)):
-        #         os.remove(os.path.join(tempfile.gettempdir(), filename))
-            
+      
         
         self._app: Flask = Flask(__name__)
         self._app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
@@ -52,8 +42,8 @@ class WebServer:
         
         self._app.route('/', methods=['GET'])(self.index)
         self._app.route('/transcribe', methods=['POST'])(self.transcribe)
-        self._app.route('/transcription', methods=['GET'])(self.get_transcriptions)
-        #self._app.route('/transcription/<trans_id>', methods=['GET'])(self.get_transcription)
+        #self._app.route('/transcription', methods=['GET'])(self.get_transcriptions)
+        self._app.route('/transcription/<trans_id>', methods=['GET'])(self.get_transcription)
         self._app.route('/transcription/<trans_id>', methods=['PUT'])(self.rename_transcription)
         self._app.route('/transcription/<trans_id>', methods=['DELETE'])(self.delete_transcription)
         self._app.route('/transcription/<trans_id>/download', methods=['GET'])(self.download_transcription)
@@ -81,7 +71,8 @@ class WebServer:
             gpu_available=torch.cuda.is_available()
         )
     
-        
+    def health_check(self):
+        return jsonify({"status": "healthy", "model": self._modelName}) 
         
     #===================================================================================#
     # CONNECTION MOTHODS                                                                #
@@ -182,41 +173,6 @@ class WebServer:
         """
         Restituisce le trascrizioni ordinate e paginate.
         """
-        # items = list(self._transcriptions.values())
-        
-        # # Logica di ordinamento
-        # reverse_sort = (sort_order == 'desc')
-        
-        # if sort_by == 'created_at':
-        #     # Assicuriamoci che created_at sia confrontabile
-        #     items.sort(key=lambda t: t.created_at if t.created_at else datetime.min, reverse=reverse_sort)
-        # elif sort_by == 'name':
-        #     items.sort(key=lambda t: t.display_name.lower() if t.display_name else "", reverse=reverse_sort)
-        # else:
-        #     # Default fallback
-        #     items.sort(key=lambda t: t.created_at if t.created_at else datetime.min, reverse=True)
-
-        # # Logica di paginazione
-        # total_items = len(items)
-        # total_pages = (total_items + self._items_per_page - 1) // self._items_per_page
-        
-        # # Calcolo indici di slice
-        # start_index = (page - 1) * self._items_per_page
-        # end_index = start_index + self._items_per_page
-        
-        # paginated_items = items[start_index:end_index]
-        
-        # return {
-        #     'items': [t.to_dict() for t in paginated_items],
-        #     'pagination': {
-        #         'current_page': page,
-        #         'total_pages': total_pages,
-        #         'total_items': total_items,
-        #         'items_per_page': self._items_per_page,
-        #         'sort_by': sort_by,
-        #         'sort_order': sort_order
-        #     }
-        # }
         return self._db.get_transcriptions_paginated(page, self._items_per_page, sort_by, sort_order)
 
         
@@ -250,9 +206,7 @@ class WebServer:
         # Per semplicità, inviamo la pagina 1 default.
         result = self._get_paginated_transcriptions()
         self._socketio.emit('transcriptions_update', result)
-        
-        # transcriptions = [t.to_dict() for t in self._transcriptions.values()]
-        # self._socketio.emit('transcriptions_update', {'transcriptions': transcriptions})
+       
             
     
     def get_transcriptions(self):
@@ -270,50 +224,23 @@ class WebServer:
     
     # serve al frontend per il pulsante "Visualizza"
     def get_transcription(self, trans_id):
-        # if trans_id in self._transcriptions:
-        #     trans = self._transcriptions[trans_id]
+        
+        trans_obj = self._db.get_transcription(trans_id)
+
+        if trans_obj:
+            # Usiamo il metodo to_dict() che abbiamo creato nella classe DB_Transcription
+            # e mappiamo i campi se il frontend si aspetta nomi diversi (es. 'text' invece di 'content')
+            data = trans_obj.to_dict()
+            data['text'] = data.pop('content') # Rinomina per compatibilità frontend
             
-        #     try:
-        #         with open(trans.file_path, 'r', encoding='utf-8') as f:
-        #             text = f.read()
-        #         return jsonify({
-        #             'id': trans_id,
-        #             'filename': trans.display_name,
-        #             'display_name': trans.display_name,
-        #             'text': text,
-        #             'language': trans.language,
-        #             'model': trans.model,
-        #             'created_at': trans.created_at,
-        #             'status': trans.status
-        #         })
-        #     except Exception as e:
-        #         return jsonify({"error": f"Errore lettura file: {str(e)}"}), 500
-        # return jsonify({"error": "Trascrizione non trovata"}), 404
-        trans = self._db.get_transcription(trans_id)
-        if trans:
-            return jsonify({
-                'id': trans_id,
-                'filename': trans['original_filename'], # Campo legacy
-                'display_name': trans['display_name'] or trans['original_filename'],
-                'text': trans['content'], # Il contenuto è salvato nel DB
-                'language': trans['language'],
-                'model': trans['model'],
-                'created_at': trans['created_at'],
-                'status': trans['status']
-            })
+            print(data)
+            return jsonify(data)
+        
         return jsonify({"error": "Trascrizione non trovata"}), 404
 
+
     def rename_transcription(self, trans_id):
-        # data = request.get_json()
-        # if not data or 'display_name' not in data:
-        #     return jsonify({"error": "Nome non specificato"}), 400
-        
-        # if trans_id in self._transcriptions:
-        #     self._transcriptions[trans_id].rename(data['display_name'])
-        #     #self._send_transcriptions()
-        #     return jsonify({"success": True, "display_name": data['display_name']})
-        
-        # return jsonify({"error": "Trascrizione non trovata"}), 404
+    
         data = request.get_json()
         if not data or 'display_name' not in data:
             return jsonify({"error": "Nome non specificato"}), 400
@@ -326,61 +253,32 @@ class WebServer:
     
 
     def delete_transcription(self, trans_id):
-        # if trans_id in self._transcriptions:
-        #     trans = self._transcriptions[trans_id]
-        #     try:
-        #         os.remove(trans.file_path)
-        #     except:
-        #         pass
-        #     del self._transcriptions[trans_id]
-        #     #self._send_transcriptions()
-        #     return jsonify({"success": True})
-        
-        # return jsonify({"error": "Trascrizione non trovata"}), 404
         if self._db.delete_transcription(trans_id):
             return jsonify({"success": True})
         return jsonify({"error": "Trascrizione non trovata"}), 404
 
+
     def download_transcription(self, trans_id):
+        trans_obj = self._db.get_transcription(trans_id)
         
-        # # print(self._transcriptions.keys())
-        # # print(trans_id)
-        
-        # if trans_id in self._transcriptions:
-        #     trans = self._transcriptions[trans_id]
-        #     try:
-        #         return send_file(
-        #             trans.file_path,
-        #             as_attachment=True,
-        #             #download_name=f"{trans.file_path.split("/")[-1]}",#f"{trans.display_name}.txt",
-        #             download_name=f"{trans.get_download_name()}",
-        #             mimetype='text/plain'
-        #         )
-        #     except Exception as e:
-        #         return jsonify({"error": f"Errore download: {str(e)}"}), 500
-        
-        # return jsonify({"error": "Trascrizione non trovata"}), 404 
-        trans = self._db.get_transcription(trans_id)
-        if trans:
-            try:
-                # Creiamo un file in memoria per il download
-                file_content = trans['content']
-                display_name = trans['display_name'] or trans['original_filename']
-                
-                # Utilizziamo send_file con BytesIO per non creare file temporanei
-                from io import BytesIO
-                buffer = BytesIO(file_content.encode('utf-8'))
-                
-                return send_file(
-                    buffer,
-                    as_attachment=True,
-                    download_name=f"{display_name}.txt",
-                    mimetype='text/plain'
-                )
-            except Exception as e:
-                return jsonify({"error": f"Errore download: {str(e)}"}), 500
-        
-        return jsonify({"error": "Trascrizione non trovata"}), 404
+        if not trans_obj:
+            return jsonify({"error": "Trascrizione non trovata"}), 404
+
+        try:
+            from io import BytesIO
+            # Accediamo direttamente agli attributi dell'oggetto
+            buffer = BytesIO(trans_obj.content.encode('utf-8'))
+            filename = trans_obj.get_download_name()
+            
+            return send_file(
+                buffer,
+                as_attachment=True,
+                download_name=f"{filename}.txt",
+                mimetype='text/plain'
+            )
+        except Exception as e:
+            logger.error(f"Errore generazione download: {e}")
+            return jsonify({"error": "Errore interno"}), 500
     
     def allowed_file(self, filename) -> bool:
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS   
@@ -391,6 +289,7 @@ class WebServer:
     #===================================================================================#
     
     def _process_queue(self):
+        
         while True:
             
             # Attendi prima di controllare di nuovo la coda
@@ -419,33 +318,12 @@ class WebServer:
                     #     self._queueLock, item, updateFunc=lambda: self._send_queue_status()
                     # )
                     transcription_obj = self._Transcriber.transcribe(
-                        self._queueLock, item, updateFunc=lambda: self._send_queue_status()
+                        item, updateFunc=lambda: self._send_queue_status()
                     )
                     
-                    # 1. Leggi il contenuto del file generato
-                    if os.path.exists(transcription_obj.file_path):
-                        with open(transcription_obj.file_path, 'r', encoding='utf-8') as f:
-                            text_content = f.read()
-                            
-                        # 2. Salva nel Database
-                        success = self._db.add_transcription(
-                            id=item.id,
-                            display_name=item.filename, # Nome iniziale è il nome file
-                            original_filename=item.filename,
-                            language=item.language,
-                            model=item.model_name,
-                            temperature=item.temperature,
-                            created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            status="completed",
-                            content=text_content
-                        )
-                        
-                        # 3. Rimuovi il file fisico (ormai è nel DB)
-                        try:
-                            os.remove(transcription_obj.file_path)
-                        except:
-                            pass
-                            
+                    if transcription_obj is not None:
+                        success = self._db.add_transcription(transcription_obj)
+
                         if not success:
                              logger.error(f"Impossibile salvare la trascrizione {item.id} nel DB (superamento limiti?)")
                              with self._queueLock:
@@ -468,11 +346,12 @@ class WebServer:
                         
                     self._send_queue_status()
                 
-                # Rimuovi il file temporaneo
-                try:
-                    os.remove(item.file_path)
-                except:
-                    pass
+                finally:
+                    # Rimuovi il file temporaneo
+                    try:
+                        os.remove(item.file_path)
+                    except:
+                        pass
                 
          
                 self._send_queue_status()
@@ -493,6 +372,7 @@ class WebServer:
                 self._queue.remove(item)
         self._send_queue_status()
 
+
     def transcribe(self):
         # Verifica presenza file
         if 'files' not in request.files:
@@ -501,7 +381,6 @@ class WebServer:
         files = request.files.getlist('files')
         if not files or files[0].filename == '':
             return jsonify({"error": "Nessun file selezionato"}), 400
-
 
 
         # Parametri opzionali
@@ -621,5 +500,4 @@ class WebServer:
 
     
         
-    def health_check(self):
-        return jsonify({"status": "healthy", "model": self._modelName})
+   
