@@ -35,8 +35,7 @@ RUN apt-get install -y libcudnn9-cuda-12=9.1.0.* libcudnn9-dev-cuda-12=9.1.0.*
 RUN apt-get install -y libcudnn9-samples=9.1.0.*
 
 # Installa Python packages
-RUN pip install torch==2.3.0+cu121 torchvision==0.18.0+cu121 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu121
- 
+#RUN pip install torch==2.3.0+cu121 torchvision==0.18.0+cu121 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu121
 
 # RUN pip install --no-cache-dir \
 #     flask \
@@ -53,6 +52,7 @@ WORKDIR /app
 # Copia codice applicazione
 COPY ./app/ .
 
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Installa dipendenze Python aggiuntive
 RUN pip install -r requirements.txt
