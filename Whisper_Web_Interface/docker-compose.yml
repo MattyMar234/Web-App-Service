@@ -16,7 +16,6 @@ services:
     volumes:
       - ./app:/app
     restart: unless-stopped
-    command: ["/start.sh"]
     deploy:
       resources:
         reservations:
